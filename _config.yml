@@ -80,7 +80,7 @@ theme: next
 deploy:
   type: git
   repo: 
-    github: https://repo_token@github.com/houugen/houugen.github.io.git,master
+    github: https://github.com/houugen/houugen.github.io.git,master
     coding: git@git.coding.net:houugen/houugen.git,master
 
 # Search
