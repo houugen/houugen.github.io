@@ -1,6 +1,6 @@
 ---
 title: 'Blockchain Security Articles'
-date: 2018-08-26 11:38:07
+date: 2018-08-26 11:48:08
 tags: [BlockChain]
 categories: [区块链]
 ---
@@ -16,10 +16,7 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-08-25
 
-* [God.Game 智能合约攻击事件分析](https://paper.seebug.org/684/)
-
-<!-- more -->
-## Old Articles
+* [以太坊智能合约多个攻击案例分析](https://paper.seebug.org/685/)
 * [God.Game 智能合约攻击事件分析](https://paper.seebug.org/684/)
 
 ### 2018-08-24 
@@ -581,3 +578,6 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 ### 2016-06-09 
 
 * [微软欲打造基于“区块链”技术的身份识别系统](http://www.freebuf.com/news/106362.html)
+
+<!-- more -->
+## Old Articles
