@@ -162,4 +162,4 @@ Wallet合约中构造函数实例化WalletLibaray。
 
 ## 0x07 Fomo3D
 
-参见[#DASP# Bad Randomness (6) -- Fomo3D](https://houugen.top/2018/08/09/DASP-Bad-Randomness-6/#more)
+参见[#DASP# Bad Randomness (6) -- Fomo3D](https://houugen.fun/2018/08/09/DASP-Bad-Randomness-6/#more)

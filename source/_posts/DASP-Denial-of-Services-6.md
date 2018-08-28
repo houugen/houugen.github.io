@@ -49,7 +49,7 @@ if (lastTimeOfNewCredit + TWELVE_HOURS < block.timestamp) {
 [Parity Multisig Hacked. Again](https://medium.com/chain-cloud-company-blog/parity-multisig-hack-again-b46771eaa838)
 [A Postmortem on the Parity Multi-Sig Library Self-Destruct](https://paritytech.io/a-postmortem-on-the-parity-multi-sig-library-self-destruct/)
 
-这个其实在[#DASP# Access Control (3)](https://houugen.top/2018/07/24/DASP-Access-Control-3/#more)一篇中已经介绍，还是利用访问控制漏洞接管parity钱包，然后不是取钱还是调用合约中kill函数销毁合约，从而导致任意用户都无法继续使用。
+这个其实在[#DASP# Access Control (3)](https://houugen.fun/2018/07/24/DASP-Access-Control-3/#more)一篇中已经介绍，还是利用访问控制漏洞接管parity钱包，然后不是取钱还是调用合约中kill函数销毁合约，从而导致任意用户都无法继续使用。
 ```js
 // kills the contract sending everything to `_to`.
 function kill(address _to) onlymanyowners(sha3(msg.data)) external {

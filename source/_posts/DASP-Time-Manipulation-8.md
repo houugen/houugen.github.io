@@ -29,7 +29,7 @@ categories: [区块链]
 
 ## 0x02 Examples
 
-前两个实例合约主要利用block.timestamp来生成随机数，而在[#DASP# Bad Randomness](https://houugen.top/2018/08/09/DASP-Bad-Randomness-6/#more)一文中我们详细介绍了这种随机数生成的缺陷。
+前两个实例合约主要利用block.timestamp来生成随机数，而在[#DASP# Bad Randomness](https://houugen.fun/2018/08/09/DASP-Bad-Randomness-6/#more)一文中我们详细介绍了这种随机数生成的缺陷。
 
 ### theRun
 
@@ -64,7 +64,7 @@ EtherLotto合约随机数的计算就更简单粗暴了，直接使用block.time
 
 [Source Code](https://etherscan.io/address/0xf45717552f12ef7cb65e95476f217ea008167ae3#code)
 
-在[#DASP# Denial of Services](https://houugen.top/2018/08/09/DASP-Denial-of-Services-6/)开篇中我们介绍过Governmental合约，其存在重置超长creditor列表时gas溢出导致的DOS问题（未检查send返回值）。
+在[#DASP# Denial of Services](https://houugen.fun/2018/08/09/DASP-Denial-of-Services-6/)开篇中我们介绍过Governmental合约，其存在重置超长creditor列表时gas溢出导致的DOS问题（未检查send返回值）。
 
 如果攻击者同时拥有矿工身份，那该合约同样存在时间戳篡改风险。
 游戏的规则玩法我们再简单介绍下，政府在最近12小时内没有收到任何投资人捐赠，则将奖金发给最后一名投资人。
