@@ -1,6 +1,6 @@
 ---
 title: 'Blockchain Security Articles'
-date: 2018-09-22 23:30:38
+date: 2018-09-25 23:30:48
 tags: [BlockChain]
 categories: [区块链]
 ---
@@ -14,21 +14,25 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ## New Articles
 
-### 2018-09-21
+### 2018-09-25
 
-* [合约变量的“皇帝新衣” |成都链安漏洞分析连载第九期 ——外部读取状态变量](https://x.xmt.cn/user/#/detail?id=16f25700b5de40248c1ecbc34884df5d)
+* [Blockwell.ai KYC Casper Token  "Psoriasis Advertising" Event Analysis](https://paper.seebug.org/709/)
 
 <!-- more -->
 ## Old Articles
-* [NEO dBFT 共识机制分析与完善](https://paper.seebug.org/708/)
+
+### 2018-09-21
+
 * [合约变量的“皇帝新衣” |成都链安漏洞分析连载第九期 ——外部读取状态变量](https://x.xmt.cn/user/#/detail?id=16f25700b5de40248c1ecbc34884df5d)
+* [NEO dBFT 共识机制分析与完善](https://paper.seebug.org/708/)
+* [以太坊合约审计 CheckList 之“以太坊智能合约编码设计问题”影响分析报告](https://paper.seebug.org/707/)
 
 ### 2018-09-20
 
+* [比特币惊现拒绝服务漏洞，Bitcoin Core开发者已发布紧急修复客户端](https://www.8btc.com/article/276865)
 * [日本加密货币交易所Zaif遭黑客攻击，损失约6000万美元](https://www.ccn.com/newsflash-japanese-cryptocurrency-exchange-zaif-hacked-59-million-in-losses/)
 * [etherscan点击劫持漏洞](https://dvpnet.io/info/detail/id/5671)
 * [NEO dBFT共识机制分析与完善](http://blogs.360.cn/post/NEO_dBFT.html)
-* [比特币惊现拒绝服务漏洞，Bitcoin Core开发者已发布紧急修复客户端](https://www.8btc.com/article/276865)
 
 ### 2018-09-19
 
@@ -37,8 +41,8 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-09-17
 
-* [EOS DApp 已成黑客提款机？慢雾安全团队支招](https://mp.weixin.qq.com/s/iq2Rq4fff3aH9zsxW45AnQ)
 * [关于假EOS刷币事件的公告](https://support.newdex.io/hc/zh-cn/articles/360015772052-关于假EOS刷币事件的公告)
+* [EOS DApp 已成黑客提款机？慢雾安全团队支招](https://mp.weixin.qq.com/s/iq2Rq4fff3aH9zsxW45AnQ)
 
 ### 2018-09-15
 
@@ -86,8 +90,8 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-08-27
 
-* [Atlas Quantum加密货币投资平台遭遇数据泄露](https://www.bleepingcomputer.com/news/security/atlas-quantum-cryptocurrency-investment-platform-suffers-data-breach/)
 * [Scavenging Attacks in "Post-Smuggling Era"](https://paper.seebug.org/687/)
+* [Atlas Quantum加密货币投资平台遭遇数据泄露](https://www.bleepingcomputer.com/news/security/atlas-quantum-cryptocurrency-investment-platform-suffers-data-breach/)
 
 ### 2018-08-25
 
@@ -103,10 +107,10 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-08-23
 
-* [游戏skr而止，漏洞周而复始 | 成都链安漏洞分析连载第六期 —— 游戏合约漏洞全面汇总](https://mp.weixin.qq.com/s?__biz=MzU2NzUxMTM0Nw==)
+* [白帽汇安全研究院：部分区块链厂商安全意识薄弱](http://www.jjckb.cn/2018-08/23/c_137412844.htm?from=groupmessage)
 * [Fomo3D 千万大奖获得者“特殊攻击技巧”最全揭露](https://mp.weixin.qq.com/s/MCuGJepXr_f18xrXZsImBQ)
 * [Fomo3D，被黑客拿走的2200万](https://mp.weixin.qq.com/s/s_RCF_EDlptQpm3d7mzApA)
-* [白帽汇安全研究院：部分区块链厂商安全意识薄弱](http://www.jjckb.cn/2018-08/23/c_137412844.htm?from=groupmessage)
+* [游戏skr而止，漏洞周而复始 | 成都链安漏洞分析连载第六期 —— 游戏合约漏洞全面汇总](https://mp.weixin.qq.com/s?__biz=MzU2NzUxMTM0Nw==)
 * [GodGame漏洞原理以及黑客攻击手法分析]()
 
 ### 2018-08-22
@@ -200,11 +204,11 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 * [构造函数缺失漏洞分析](http://www.freebuf.com/vuls/178574.html)
 * [警惕 | 恶意EOS合约存在吞噬用户RAM的安全风险](http://www.freebuf.com/vuls/178812.html)
-* [【EOS Fomo3D你千万别玩】狼人杀遭到溢出攻击, 已经凉凉](https://bihu.com/article/995093)
-* [EOS 安全问题紧急情报通知：警惕 EOS 恶意合约吞噬用户 RAM](http://www.bishijie.com/kuaixun_82603)
-* [震惊！利好变利空，烧币也能作假！](https://mp.weixin.qq.com/s/-4d3OD0M_a0xGGADNzi7Xw)
 * [Fomo3D山寨版原来是这样留后门的](https://m.xiaoyunquegroup.com/#/content/show/5b571cb3abeb6069583111d7)
+* [【EOS Fomo3D你千万别玩】狼人杀遭到溢出攻击, 已经凉凉](https://bihu.com/article/995093)
 * [Solidity中的delegatecall杂谈](https://www.anquanke.com/post/id/152590)
+* [震惊！利好变利空，烧币也能作假！](https://mp.weixin.qq.com/s/-4d3OD0M_a0xGGADNzi7Xw)
+* [EOS 安全问题紧急情报通知：警惕 EOS 恶意合约吞噬用户 RAM](http://www.bishijie.com/kuaixun_82603)
 
 ### 2018-07-24 
 
@@ -234,19 +238,19 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-07-19 
 
-* [CertiK：一款智能合约的代码审计平台](http://www.freebuf.com/articles/blockchain-articles/177087.html)
 * [Parity多重签名函数库自杀漏洞](http://www.freebuf.com/vuls/177805.html)
+* [CertiK：一款智能合约的代码审计平台](http://www.freebuf.com/articles/blockchain-articles/177087.html)
 * [首个区块链token的自动化薅羊毛攻击分析](https://mp.weixin.qq.com/s/R6L1BpEoUvcjsl-uQqM0Tg)
 
 ### 2018-07-18
 
-* [EOS被盗事件频起，这里有一份安全攻略可以借鉴](https://m.xiaoyunquegroup.com/#/content/show/5b4ed84c9240d32f4179f33d)
 * [一种新型的constructor函数使用漏洞，可导致合约权限丢失、代币增发](https://bbs.pediy.com/thread-229724.htm)
+* [EOS被盗事件频起，这里有一份安全攻略可以借鉴](https://m.xiaoyunquegroup.com/#/content/show/5b4ed84c9240d32f4179f33d)
 
 ### 2018-07-17 
 
-* [安恒风暴中心助力编著区块链安全产业全生命周期整体解决方案](http://www.freebuf.com/articles/blockchain-articles/176740.html)
 * [LightCoin合约非一致性检查漏洞分析](http://www.freebuf.com/vuls/177565.html)
+* [安恒风暴中心助力编著区块链安全产业全生命周期整体解决方案](http://www.freebuf.com/articles/blockchain-articles/176740.html)
 
 ### 2018-07-16 
 
@@ -266,15 +270,15 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 ### 2018-07-11 
 
 * [浅析AMR智能合约批量转账溢出漏洞](http://www.freebuf.com/vuls/177217.html)
-* [以太坊智能合约OPCODE逆向之理论基础篇](https://paper.seebug.org/640/)
 * [一些EOS账户使用弱助记词生成EOS私钥，存在高危风险](https://www.peckshield.com/2018/07/10/eosRescuer/)
+* [以太坊智能合约OPCODE逆向之理论基础篇](https://paper.seebug.org/640/)
 
 ### 2018-07-10
 
-* [Bancor交易所被入侵事件解析](火星财经)
-* [Microsoft Azure 以太坊节点控制面板存在未授权访问漏洞](https://paper.seebug.org/638/)
 * [交易所EXX称遭黑客频繁攻击](https://www.exx.com/blog/display?type=102)
 * [空手套白狼？USDT 假充值逻辑缺陷漏洞利用分析](http://www.freebuf.com/articles/blockchain-articles/176668.html)
+* [Microsoft Azure 以太坊节点控制面板存在未授权访问漏洞](https://paper.seebug.org/638/)
+* [Bancor交易所被入侵事件解析](火星财经)
 
 ### 2018-07-09 
 
@@ -308,25 +312,25 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-06-28
 
-* [EPoD: 以太坊Geth客户端拒绝服务漏洞 (CVE-2018-12018)](https://www.peckshield.com/2018/06/27/EPoD/)
 * [部分交易所对USDT币充值存在校验缺陷，可通过“假充值”导致市场混乱！](https://wx.zsxq.com/mweb/views/topicdetail/topicdetail.html?topic_id=15415144481112)
+* [EPoD: 以太坊Geth客户端拒绝服务漏洞 (CVE-2018-12018)](https://www.peckshield.com/2018/06/27/EPoD/)
 
 ### 2018-06-27 
 
 * [区块链黑幕 | 我们不生产“白皮书”，我们只是“白皮书”的搬运工！](http://www.freebuf.com/articles/blockchain-articles/175448.html)
-* [嗨池称日前遭黑客攻击，将永久关闭](http://www.huoxing24.com/liveNewsDetail/2018062707172287074.html)
 * [以太坊 Solidity 合约 call 函数簇滥用导致的安全风险](https://paper.seebug.org/633/)
 * [HDAC矿池遭受黑客攻击](http://www.8btc.com/kx-294)
-* [Solidity 安全：已知攻击方法和常见防御模式综合列表](https://github.com/slowmist/Knowledge-Base/blob/master/solidity-security-comprehensive-list-of-known-attack-vectors-and-common-anti-patterns-chinese.md)
+* [嗨池称日前遭黑客攻击，将永久关闭](http://www.huoxing24.com/liveNewsDetail/2018062707172287074.html)
 * [EOS智能合约的一些问题总结和建议](https://mp.weixin.qq.com/s/NXrTZHLr95i9CcWRkrE5Jw)
+* [Solidity 安全：已知攻击方法和常见防御模式综合列表](https://github.com/slowmist/Knowledge-Base/blob/master/solidity-security-comprehensive-list-of-known-attack-vectors-and-common-anti-patterns-chinese.md)
 * [神秘组织BitPico宣布对BCH发动51%攻击](http://www.8btc.com/roger-ver-bitpico-hard-fork-bitcoin-cash)
 
 ### 2018-06-26 
 
 * [Solidity中存储方式错误使用所导致的变量覆盖](http://www.freebuf.com/articles/blockchain-articles/175237.html)
 * [利用网游加速器隧道传播挖矿蠕虫事件分析报告](https://www.anquanke.com/post/id/149059)
-* [从以太坊"MorphToken事件"看智能合约构造函数大小写编码错误漏洞](https://paper.seebug.org/630/)
 * [以太坊蜜罐智能合约分析](https://paper.seebug.org/631/)
+* [从以太坊"MorphToken事件"看智能合约构造函数大小写编码错误漏洞](https://paper.seebug.org/630/)
 
 ### 2018-06-25
 
@@ -335,8 +339,8 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-06-23
 
-* [Mt.Gox暂停破产,17万枚比特币将退还客户和债主](https://www.ithome.com/html/it/366506.htm)
 * [以太坊去中心化应用dApp的渗透测试姿势浅析](http://www.freebuf.com/articles/blockchain-articles/174050.html)
+* [Mt.Gox暂停破产,17万枚比特币将退还客户和债主](https://www.ithome.com/html/it/366506.htm)
 
 ### 2018-06-22
 
@@ -345,20 +349,20 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 ### 2018-06-21
 
 * [以太坊智能合约call注入攻击](https://blog.csdn.net/u011721501/article/details/80757811)
-* [加密货币2018大事记 | 你来偷，他来抢，币圈是否真的无宁日？](http://www.freebuf.com/special/175052.html)
 * [ERC20 智能合约整数溢出系列漏洞披露](https://paper.seebug.org/626/)
+* [加密货币2018大事记 | 你来偷，他来抢，币圈是否真的无宁日？](http://www.freebuf.com/special/175052.html)
 
 ### 2018-06-20
 
-* [韩国最大虚拟货币交易平台被黑，价值2亿人民币资产失窃](http://gz.people.com.cn/n2/2018/0620/c344103-31722539.html)
-* [ATN 抵御合约攻击的报告——基于ERC223与DS-AUTH的混合漏洞](https://paper.seebug.org/621/)
 * [ERC223智能合约ATN币出现owner权限窃取漏洞](https://mp.weixin.qq.com/s/S5Oq4TxxW5OgEkOmy8ZSzQ)
+* [ATN 抵御合约攻击的报告——基于ERC223与DS-AUTH的混合漏洞](https://paper.seebug.org/621/)
+* [韩国最大虚拟货币交易平台被黑，价值2亿人民币资产失窃](http://gz.people.com.cn/n2/2018/0620/c344103-31722539.html)
 
 ### 2018-06-19
 
-* [YEED代币存在任意关停交易漏洞](https://mp.weixin.qq.com/s/fdZrXG69_KhVZtJyCfXXCA)
-* [CVE-2018-12018:以太坊存在DDOS漏洞，可致60%节点下线](https://www.peckshield.com/2018/06/15/EPoD/)
 * [LCX币出现被可任意远程关停交易漏洞](https://mp.weixin.qq.com/s/J4_-NXOaTw7iDdmvc2hPfg)
+* [CVE-2018-12018:以太坊存在DDOS漏洞，可致60%节点下线](https://www.peckshield.com/2018/06/15/EPoD/)
+* [YEED代币存在任意关停交易漏洞](https://mp.weixin.qq.com/s/fdZrXG69_KhVZtJyCfXXCA)
 
 ### 2018-06-15
 
@@ -391,14 +395,14 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-06-06
 
-* [以太坊parity客户端存在潜在的共识问题](https://paritytech.io/security-alert-3/)
 * [AACOIN平台出现BUG可无限冲币](https://mp.weixin.qq.com/s/Q-vRnuYl5H233iNB3FmGqA)
+* [以太坊parity客户端存在潜在的共识问题](https://paritytech.io/security-alert-3/)
 
 ### 2018-06-05
 
-* [通俗易懂谈BEC智能合约致命漏洞](https://www.anquanke.com/post/id/146702)
-* [区块链入门漫谈](https://www.anquanke.com/post/id/146795)
 * [Block.one被黑客入侵，投资者价值数百万美元的代币被骗](https://medium.com/@Michael_Spencer/block-one-was-hacked-eos-tokens-worth-millions-scammed-from-investors-ac9b0484515e)
+* [区块链入门漫谈](https://www.anquanke.com/post/id/146795)
+* [通俗易懂谈BEC智能合约致命漏洞](https://www.anquanke.com/post/id/146702)
 
 ### 2018-06-04 
 
@@ -426,11 +430,11 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-05-28
 
-* [GATE交易所遭黑客攻击，RLC瞬间爆拉百倍](https://page.om.qq.com/page/OQfeA9iDK0aQ6T2IWPP-0lnw0?refer=cp_1021)
-* [以太坊智能合约安全入门了解一下（下）](https://www.anquanke.com/post/id/146322)
 * [蚂蚁矿机多款型号存在远程命令执行漏洞（CVE-2018-11220）](https://nosec.org/?token=xh2p8zpekq)
 * [EOSIO社区的多名成员在5月27日收到了一封钓鱼邮件](https://block.one/news/phishing-email-statement/)
+* [GATE交易所遭黑客攻击，RLC瞬间爆拉百倍](https://page.om.qq.com/page/OQfeA9iDK0aQ6T2IWPP-0lnw0?refer=cp_1021)
 * [加密货币交易平台Taylor遭黑客攻击：被盗2500余个ETH](https://www.cryptoglobe.com/latest/2018/05/Crypto-Trading-App-Taylor-Has-Funds-Stolen-in-Large-Scale-Attack/)
+* [以太坊智能合约安全入门了解一下（下）](https://www.anquanke.com/post/id/146322)
 
 ### 2018-05-26
 
@@ -447,10 +451,10 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-05-22
 
-* [2017年假冒ICO使澳大利亚累计损失约3.4亿澳元](https://www.ccn.com/crypto-scams-fake-icos-cost-australians-over-au2-million-in-2017-consumer-watchdog/)
 * [以太坊区块链游戏Ether Cartel存在越权调用漏洞并已被野外利用，合约所有人可被攻击者篡改。](https://www.peckshield.com/2018/05/21/ceoAnyone/)
 * [恶意软件伪装成Cloudflare页面默默挖矿](http://www.freebuf.com/news/172140.html)
 * [黑客正在利用Claymore矿机漏洞进行大范围的扫描和攻击](https://btcmanager.com/ethereum-miners-mass-targeted-by-satori-botnet-attack/)
+* [2017年假冒ICO使澳大利亚累计损失约3.4亿澳元](https://www.ccn.com/crypto-scams-fake-icos-cost-australians-over-au2-million-in-2017-consumer-watchdog/)
 * [日本加密货币Monacoin受自私采矿攻击攻击](https://www.ccn.com/japanese-cryptocurrency-monacoin-hit-by-selfish-mining-attack/)
 * [OKEX疑似出现重大bug导致钱生钱](https://nosec.org/my/threats/1618)
 * [XVG币再次遭受51%算力攻击](https://cryptoslate.com/verge-victim-to-yet-another-51-attack-xvg-down-15-in-past-24-hours/)
@@ -486,8 +490,8 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 ### 2018-05-11 
 
 * [GhostMiner解析：无文件挖矿的新姿势](http://www.freebuf.com/articles/blockchain-articles/170807.html)
-* [西安警方破获假借区块链之名进行网络传销案件](http://bianews.com/news/flash?id=12540)
 * [最近出现了一种新型使用无文件技术的恶意挖矿软件：GhostMiner](https://blog.minerva-labs.com/ghostminer-cryptomining-malware-goes-fileless)
+* [西安警方破获假借区块链之名进行网络传销案件](http://bianews.com/news/flash?id=12540)
 * [CVE-2018-10706：ERC20令牌SCA存在整数溢出漏洞，可导致攻击者获得大量代币](https://www.peckshield.com/2018/05/10/multiOverflow/)
 
 ### 2018-05-10
@@ -496,12 +500,12 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-05-09
 
-* [史上最能穷折腾的挖矿木马“520Miner”：控制数千台机器挖矿，却一毛钱都没挣到](http://www.freebuf.com/column/171043.html)
-* [攻击者如何在Bancor交易所中实施先行攻击](https://hackernoon.com/front-running-bancor-in-150-lines-of-python-with-ethereum-api-d5e2bfd0d798)
-* [以太坊Parity钱包 multi-sig库被人越权销毁，导致大量资金冻结](https://news.bitcoin.com/parity-disable-multi-sig-wake-bug-nuked-168-million-ether/)
-* [CVE-2018-10705：ERC20令牌AURA存在越权调用漏洞，可导致攻击者获得合约所有权](https://peckshield.com/2018/05/03/ownerAnyone/)
 * [CVE-2018-10666：ERC20令牌IDXM存在越权调用漏洞，可导致攻击者获得合约所有权](https://medium.com/@jonghyk.song/aurora-idex-membership-idxm-erc20-token-allows-attackers-to-acquire-contract-ownership-1ff426cee7c6)
 * [USDT 发行方 Tether 遭受黑客攻击事件](http://www.freebuf.com/news/155146.html)
+* [攻击者如何在Bancor交易所中实施先行攻击](https://hackernoon.com/front-running-bancor-in-150-lines-of-python-with-ethereum-api-d5e2bfd0d798)
+* [史上最能穷折腾的挖矿木马“520Miner”：控制数千台机器挖矿，却一毛钱都没挣到](http://www.freebuf.com/column/171043.html)
+* [以太坊Parity钱包 multi-sig库被人越权销毁，导致大量资金冻结](https://news.bitcoin.com/parity-disable-multi-sig-wake-bug-nuked-168-million-ether/)
+* [CVE-2018-10705：ERC20令牌AURA存在越权调用漏洞，可导致攻击者获得合约所有权](https://peckshield.com/2018/05/03/ownerAnyone/)
 
 ### 2018-05-07 
 
@@ -509,10 +513,10 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-05-04
 
-* [SMT整型溢出漏洞分析笔记](https://paper.seebug.org/591/)
 * [黑客伪造算力盗取多种数字货币](https://paper.seebug.org/589/)
-* [在私有以太坊上实现针对ERC20数字货币ProxyOverflow漏洞的攻击](https://paper.seebug.org/592/)
 * [极验Geetest  | 区块链项目落地后，有哪些坑你不该踩？](https://www.anquanke.com/post/id/107311)
+* [SMT整型溢出漏洞分析笔记](https://paper.seebug.org/591/)
+* [在私有以太坊上实现针对ERC20数字货币ProxyOverflow漏洞的攻击](https://paper.seebug.org/592/)
 
 ### 2018-05-03
 
@@ -533,14 +537,14 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 ### 2018-04-25 
 
 * [黑客两小时卷走13000美金，MyEtherWallet DNS劫持事件深度分析](http://www.freebuf.com/articles/blockchain-articles/169773.html)
-* [以太坊钱包 Myetherwallet 遭 DNS 劫持](http://bitcoinist.com/myetherwallet-users-lose-funds-to-dns-hack/)
 * [BeautyChain（BEC）智能合约中出现了一个灾难性的漏洞（整形溢出漏洞）](http://www.freebuf.com/vuls/169741.html)
+* [以太坊钱包 Myetherwallet 遭 DNS 劫持](http://bitcoinist.com/myetherwallet-users-lose-funds-to-dns-hack/)
 
 ### 2018-04-23
 
 * [BitPay CEO遭网络钓鱼，资金被骗](https://www.coindesk.com/bitpay-sues-insurer-after-losing-1-8-million-in-phishing-attack/)
 * [国内山寨币交易平台比特儿遭到黑客攻击](http://www.8btc.com/bter-lost-7170-bitcoin)
-* [交易所Cryptsy被攻击，黑客从Cryptsy的“安全/冷钱包”转账比特币和莱特币以及其他更小型的加密币](https://www.coindesk.com/cryptsy-bankruptcy-millions-bitcoin-stolen/)
+* [全球知名的数字货币交易所Bitstamp系统管理员被诱导执行恶意文件](https://www.coindesk.com/bitstamp-claims-roughly-19000-btc-lost-hot-wallet-hack/)
 * [比特币交易平台BitQuick服务器遭攻击](https://www.ccn.com/bitquick-down-2-to-4-weeks-after-cyber-attack/)
 * [ShapeShift丢失23万美元数字货币，“内鬼”将安全信息出售给黑客](https://www.ccn.com/bitcoin-exchange-shapeshift-hacks-sees-230000-lost/)
 * [香港数字货币交易所Gatecoin遭黑客攻击](http://news.btc123.com/news/detail?id=2968)
@@ -561,7 +565,7 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 * [比特币网络遭遇垃圾交易攻击](http://www.easysofts.com.cn/2095.html)
 * [基于以太坊的数字货币Krypton遭受来自一个名为“51% Crew”的组织的51%攻击](https://cryptohustle.com/krypton-recovers-from-a-new-type-of-51-network-attack)
 * [一行代码蒸发了¥6,447,277,680 人民币！](https://paper.seebug.org/582/)
-* [全球知名的数字货币交易所Bitstamp系统管理员被诱导执行恶意文件](https://www.coindesk.com/bitstamp-claims-roughly-19000-btc-lost-hot-wallet-hack/)
+* [交易所Cryptsy被攻击，黑客从Cryptsy的“安全/冷钱包”转账比特币和莱特币以及其他更小型的加密币](https://www.coindesk.com/cryptsy-bankruptcy-millions-bitcoin-stolen/)
 * [GHash.io矿池对赌博网站BetCoin Dice进行多次付款欺诈，实施双重支出攻击.](https://bitcointalk.org/index.php?topic=327767.0)
 * [Blockchain.info 因被 DDoS 攻击服务临时下线](http://newsbtc.com/2014/04/21/blockchain-info-services-due-ddos-attacks/)
 * [Eligius矿池遭受“块代扣攻击”](https://www.coinmis.com/eligius-mine-suffered-block-buckle-attack/)
@@ -639,8 +643,8 @@ auto(vps)      : script(python2markdown & bash2workflow) + travis2hexo
 
 ### 2018-01-24
 
-* [360CERT——区块链技术安全讨论](https://www.anquanke.com/post/id/95873)
 * [区块链技术安全讨论](https://paper.seebug.org/511/)
+* [360CERT——区块链技术安全讨论](https://www.anquanke.com/post/id/95873)
 
 ### 2017-06-12 
 
