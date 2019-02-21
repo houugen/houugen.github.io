@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/cropped-favicon-512.png?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="FridaDev作为大自然的搬运工和组装师傅，收集并增强一些非常有用的frida脚本封装为FridaDev工具，可以实现一键式逆向需求，提高生产力。 脚本来源：  https://github.com/0xdea/frida-scripts https://github.com/AloneMonkey/iOSREBook/tree/master/chapter-7/7.3%20Frida%E5%A">
+<meta name="keywords" content="iOS,Frida">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS Hook FridaDev">
+<meta property="og:url" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/index.html">
+<meta property="og:site_name" content="Dino&#39;s blog">
+<meta property="og:description" content="FridaDev作为大自然的搬运工和组装师傅，收集并增强一些非常有用的frida脚本封装为FridaDev工具，可以实现一键式逆向需求，提高生产力。 脚本来源：  https://github.com/0xdea/frida-scripts https://github.com/AloneMonkey/iOSREBook/tree/master/chapter-7/7.3%20Frida%E5%A">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/2.png">
+<meta property="og:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/1.png">
+<meta property="og:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/3.png">
+<meta property="og:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/5.png">
+<meta property="og:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/4.png">
+<meta property="og:updated_time" content="2019-02-21T08:51:22.494Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS Hook FridaDev">
+<meta name="twitter:description" content="FridaDev作为大自然的搬运工和组装师傅，收集并增强一些非常有用的frida脚本封装为FridaDev工具，可以实现一键式逆向需求，提高生产力。 脚本来源：  https://github.com/0xdea/frida-scripts https://github.com/AloneMonkey/iOSREBook/tree/master/chapter-7/7.3%20Frida%E5%A">
+<meta name="twitter:image" content="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/2.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS Hook FridaDev | Dino's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Dino's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://houugen.github.io/2018/11/30/iOS-Hook-FridaDev/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Dino">
+      <meta itemprop="description" content="Just make more records and write more fucking code.">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Dino's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS Hook FridaDev
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-11-30 09:52:00" itemprop="dateCreated datePublished" datetime="2018-11-30T09:52:00+00:00">2018-11-30</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/iOS/" itemprop="url" rel="index"><span itemprop="name">iOS</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/11/30/iOS-Hook-FridaDev/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">Comments: </span> <span class="post-comments-count valine-comment-count" data-xid="/2018/11/30/iOS-Hook-FridaDev/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="FridaDev"><a href="#FridaDev" class="headerlink" title="FridaDev"></a>FridaDev</h2><p>作为大自然的搬运工和组装师傅，收集并增强一些非常有用的frida脚本封装为FridaDev工具，可以实现一键式逆向需求，提高生产力。</p>
+<p>脚本来源：</p>
+<ul>
+<li><a href="https://github.com/0xdea/frida-scripts" target="_blank" rel="noopener">https://github.com/0xdea/frida-scripts</a></li>
+<li><a href="https://github.com/AloneMonkey/iOSREBook/tree/master/chapter-7/7.3%20Frida%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8/Frida" target="_blank" rel="noopener">https://github.com/AloneMonkey/iOSREBook/tree/master/chapter-7/7.3%20Frida%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8/Frida</a></li>
+</ul>
+<p>修改：</p>
+<ul>
+<li>动态hook</li>
+<li>ui增加打印controller和action</li>
+<li>根据稳定性trace选择spwan，其他功能选择attach</li>
+</ul>
+<p><strong>仓库直通车</strong>：<a href="https://github.com/houugen/FridaDev" target="_blank" rel="noopener">https://github.com/houugen/FridaDev</a></p>
+<a id="more"></a>
+<h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">usage: fridaDev.py [-h] [-l] [-i] [-u appName] [-d appName] [-t identifier]</span><br><span class="line">                   [-e identifier]</span><br><span class="line"></span><br><span class="line">frida tools</span><br><span class="line"></span><br><span class="line">optional arguments:</span><br><span class="line">  -h, --help            show this help message and exit</span><br><span class="line">  -l, --list            list running processes</span><br><span class="line">  -i, --info            list installed app infomation</span><br><span class="line">  -u appName, --ui appName</span><br><span class="line">                        show UI (only for ios)</span><br><span class="line">  -d appName, --dynhook appName</span><br><span class="line">                        dynamic hook</span><br><span class="line">  -t identifier, --trace identifier</span><br><span class="line">                        ObjC/java and Module tracer</span><br><span class="line">  -e identifier, --enumerate identifier</span><br><span class="line">                        Collection of functions to enumerate classes and</span><br></pre></td></tr></table></figure>
+<h4 id="list"><a href="#list" class="headerlink" title="list"></a>list</h4><p>功能：列出运行进程名及pid</p>
+<p>使用（支持grep）：./fridaDev.py -l (| grep xxx)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id=&quot;83ae210b1d153c611e268b45b54e5f77d575212b&quot;, name=&quot;iPhone&quot;, type=&apos;usb&apos;)</span><br><span class="line"></span><br><span class="line">pid   	name</span><br><span class="line">0     	launchd</span><br><span class="line">1     	launchd</span><br><span class="line">179   	amfid</span><br><span class="line">346   	jailbreakd</span><br><span class="line">491   	wifid</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h4 id="info"><a href="#info" class="headerlink" title="info"></a>info</h4><p>功能：列出已装应用的应用名、bundleId及沙盒路径</p>
+<p>使用（支持grep）：./fridaDev.py -i (| grep xxx)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id=&quot;83ae210b1d153c611e268b45b54e5f77d575212b&quot;, name=&quot;iPhone&quot;, type=&apos;usb&apos;)</span><br><span class="line"></span><br><span class="line">app name                                	bundle identify                                             	documents path</span><br><span class="line">undefinedQQ浏览器                          	com.tencent.mttlite                                         	file:///private/var/mobile/Containers/Data/Application/0F2137C5-52EC-4C44-9247-9D1E2666AE0C/Documents</span><br><span class="line">计算器                                     	com.apple.calculator                                        	file:///private/var/mobile/Containers/Data/Application/4A593BCE-1460-4785-BC18-18DFAF5BFFBA/Documents</span><br><span class="line">通讯录                                     	com.apple.MobileAddressBook                                 	file:///private/var/mobile/Containers/Data/Application/F8C2EB38-1FBE-415B-B562-C910589F66FE/Documents</span><br><span class="line">咪咕善跑                                    	org.imohoo.shanpao                                          	file:///private/var/mobile/Containers/Data/Application/0FC0A9BF-958C-4BCD-9AF0-5680B414A853/Documents</span><br></pre></td></tr></table></figure>
+<h4 id="ui（仅支持iOS）"><a href="#ui（仅支持iOS）" class="headerlink" title="ui（仅支持iOS）"></a>ui（仅支持iOS）</h4><p>功能：dump iOS界面布局，支持打印nextResponder、controller及action</p>
+<p>使用：</p>
+<ol>
+<li>打开需要dump的应用界面</li>
+<li>./fridaDev.py -u appName<ul>
+<li>打印响应链nextResponder： n 0x144f6e6c0</li>
+<li>打印controller： c 0x144f6e6c0</li>
+<li>打印action： a 0x144f6e6c0</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id="83ae210b1d153c611e268b45b54e5f77d575212b", name="iPhone", type='usb')</span><br><span class="line"></span><br><span class="line">&lt;UIWindow: <span class="number">0x146007e40</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); gestureRecognizers = &lt;NSArray: <span class="number">0x146009290</span>&gt;; layer = &lt;UIWindowLayer: <span class="number">0x146007dc0</span>&gt;&gt;</span><br><span class="line">   | &lt;UILayoutContainerView: <span class="number">0x144d629d0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; gestureRecognizers = &lt;NSArray: <span class="number">0x14602c450</span>&gt;; layer = &lt;CALayer: <span class="number">0x144d63ac0</span>&gt;&gt;</span><br><span class="line">   |    | &lt;UINavigationTransitionView: <span class="number">0x146026be0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); clipsToBounds = YES; autoresize = W+H; layer = &lt;CALayer: <span class="number">0x146023cf0</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;UIViewControllerWrapperView: <span class="number">0x144f6fd50</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; layer = &lt;CALayer: <span class="number">0x144f6f2e0</span>&gt;&gt;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">   |    |    |    |    |    |    | &lt;FireflyButton: <span class="number">0x144f6e6c0</span>; baseClass = UIButton; frame = (<span class="number">38</span> <span class="number">120.5</span>; <span class="number">183</span> <span class="number">34</span>); clipsToBounds = YES; opaque = NO; layer = &lt;CALayer: <span class="number">0x144f6d690</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UIButtonLabel: 0x1460665c0; frame = (73.5 6.5; 36 21.5); text = '登录'; opaque = NO; userInteractionEnabled = NO; layer = &lt;_UILabelLayer: 0x1460667e0&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    |    | &lt;_UILabelContentLayer: <span class="number">0x144f67e20</span>&gt; (layer)</span><br><span class="line">   |    | &lt;UINavigationBar: <span class="number">0x144da8880</span>; frame = (<span class="number">0</span> <span class="number">20</span>; <span class="number">320</span> <span class="number">44</span>); opaque = NO; autoresize = W; tintColor = UIDeviceWhiteColorSpace <span class="number">1</span> <span class="number">1</span>; gestureRecognizers = &lt;NSArray: <span class="number">0x14602ddd0</span>&gt;; layer = &lt;CALayer: <span class="number">0x1460279d0</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;_UINavigationBarBackground: <span class="number">0x146026f60</span>; frame = (<span class="number">0</span> <span class="number">-20</span>; <span class="number">320</span> <span class="number">64</span>); opaque = NO; autoresize = W; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x14602b8b0</span>&gt;&gt;</span><br><span class="line">   |    |    |    | &lt;UIImageView: <span class="number">0x144db8f10</span>; frame = (<span class="number">0</span> <span class="number">64</span>; <span class="number">320</span> <span class="number">0</span>); opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x146023e00</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;_UINavigationBarBackIndicatorView: <span class="number">0x14602cab0</span>; frame = (<span class="number">8</span> <span class="number">11.5</span>; <span class="number">13</span> <span class="number">21</span>); alpha = <span class="number">0</span>; opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x144da7510</span>&gt;&gt;</span><br><span class="line">&lt;CSNavJViewController <span class="number">0x1450fe000</span>&gt;, state: appeared, view: &lt;UILayoutContainerView <span class="number">0x144d629d0</span>&gt;</span><br><span class="line">   | &lt;FireflyTestLoginViewController <span class="number">0x144f37c30</span>&gt;, state: appeared, view: &lt;UIView <span class="number">0x14602d3a0</span>&gt;</span><br><span class="line">a <span class="number">0x144f6e6c0</span></span><br><span class="line">-&gt; loginButtonClick</span><br><span class="line">c <span class="number">0x144f6e6c0</span></span><br><span class="line">-&gt; &lt;FireflyTestLoginViewController: <span class="number">0x144f37c30</span>&gt;</span><br><span class="line">n <span class="number">0x144f6e6c0</span></span><br><span class="line">-&gt;&lt;UIImageView: <span class="number">0x144f33530</span>; frame = (<span class="number">30.5</span> <span class="number">145.5</span>; <span class="number">259</span> <span class="number">189</span>); alpha = <span class="number">0.8</span>; opaque = NO; layer = &lt;CALayer: <span class="number">0x144f03d00</span>&gt;&gt;</span><br><span class="line">--&gt;&lt;UIImageView: <span class="number">0x144f390a0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); opaque = NO; layer = &lt;CALayer: <span class="number">0x144f24d10</span>&gt;&gt;</span><br><span class="line">---&gt;&lt;UIView: <span class="number">0x14602d3a0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; layer = &lt;CALayer: <span class="number">0x144d49060</span>&gt;&gt;</span><br><span class="line">----&gt;&lt;FireflyTestLoginViewController: <span class="number">0x144f37c30</span>&gt;</span><br><span class="line">-----&gt;&lt;UIViewControllerWrapperView: <span class="number">0x144f6fd50</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; layer = &lt;CALayer: <span class="number">0x144f6f2e0</span>&gt;&gt;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h4 id="dynhook"><a href="#dynhook" class="headerlink" title="dynhook"></a>dynhook</h4><p>功能：hook对应函数，做你所想</p>
+<p>说明：android Hook代码写入<code>android_hook.js</code>，iOS Hook代码写入<code>ios_hook.js</code>，脚本自行判断平台。</p>
+<p>使用：./fridaDev.py -d appName</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id=&quot;83ae210b1d153c611e268b45b54e5f77d575212b&quot;, name=&quot;iPhone&quot;, type=&apos;usb&apos;)</span><br><span class="line"></span><br><span class="line">[+] killing 36988</span><br><span class="line">[-] xxx is not found...</span><br><span class="line">[+] Injecting script to xxx(37079)</span><br><span class="line">+[FireflySecurityUtil aesEncrypt:key:vector:] onEnter...</span><br><span class="line">+[FireflySecurityUtil aesEncrypt:key:vector:] onLeave...</span><br><span class="line">ret: nil</span><br></pre></td></tr></table></figure>
+<h4 id="trace"><a href="#trace" class="headerlink" title="trace"></a>trace</h4><p>功能：追踪函数调用，打印输入输出</p>
+<p>说明：android trace修改<code>android_trace.js</code>，iOS trace修改<code>ios_trace.js</code>，脚本自行判断平台。 <strong>支持正则，可以发挥你的想象力</strong>。</p>
+<p>修改如下内容：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// usage examples</span></span><br><span class="line"><span class="keyword">if</span> (ObjC.available) &#123;</span><br><span class="line">	trace(<span class="string">"-[FireflyTestLoginViewController loginButtonClick]"</span>)</span><br><span class="line">	<span class="comment">// trace("-[FireflyTestLoginViewController *]")</span></span><br><span class="line">	trace(<span class="string">"*[* *ncrypt*]"</span>);</span><br><span class="line">	<span class="comment">// trace("exports:libSystem.B.dylib!CCCrypt");</span></span><br><span class="line">	<span class="comment">// trace("exports:libSystem.B.dylib!open");</span></span><br><span class="line">	<span class="comment">// trace("exports:*!open*");</span></span><br><span class="line">	</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"> 	send(<span class="string">"error: Objective-C Runtime is not available!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用：./fridaDev.py -t bundleId</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">[iPhone::com.lzm.khjlHack]-&gt;</span><br><span class="line">*** entered -[FireflyTestLoginViewController viewDidLoad]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">*** entered -[FireflyTestLoginViewController setIsBool:]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">setIsBool: nil</span><br><span class="line"></span><br><span class="line">retval: &lt;FireflyTestLoginViewController: 0x12de4a180&gt;</span><br><span class="line"></span><br><span class="line">*** exiting -[FireflyTestLoginViewController setIsBool:]</span><br><span class="line"></span><br><span class="line">*** entered -[FireflyTestLoginViewController initViews]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">*** entered -[FireflyTestLoginViewController BackIamgeViewUI]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">retval: &lt;UIView: 0x12de3b400; frame = (0 0; 320 480); autoresize = W+H; layer = &lt;CALayer: 0x1c02292a0&gt;&gt;</span><br><span class="line"></span><br><span class="line">*** exiting -[FireflyTestLoginViewController BackIamgeViewUI]</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h4 id="enumerate"><a href="#enumerate" class="headerlink" title="enumerate"></a>enumerate</h4><p>功能：枚举所有类、所有方法、一个类的所有方法、匹配正则的所有类、匹配正则的所有方法</p>
+<p>说明：android enumerate修改<code>android_enum.js</code>，iOS enumerate修改<code>ios_enum.js</code>，脚本自行判断平台。 <strong>支持正则，可以发挥你的想象力</strong>。</p>
+<p>修改如下内容：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// usage examples</span></span><br><span class="line"><span class="keyword">if</span> (ObjC.available) &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// enumerate all classes</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	var a = enumAllClasses();</span></span><br><span class="line"><span class="comment">	a.forEach(function(s) &#123; </span></span><br><span class="line"><span class="comment">		console.log(s); </span></span><br><span class="line"><span class="comment">	&#125;);</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// find classes that match a pattern</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	var a = findClasses(/FireflySecurityUtil/i);</span></span><br><span class="line"><span class="comment">	a.forEach(function(s) &#123; </span></span><br><span class="line"><span class="comment">		console.log(s); </span></span><br><span class="line"><span class="comment">	&#125;);</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// enumerate all methods in a class</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	var a = enumMethods("CGBLoginViewController")</span></span><br><span class="line"><span class="comment">	a.forEach(function(s) &#123; </span></span><br><span class="line"><span class="comment">		console.log(s); </span></span><br><span class="line"><span class="comment">	&#125;);</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// enumerate all methods</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	var d = enumAllMethods();</span></span><br><span class="line"><span class="comment">	for (k in d) &#123;</span></span><br><span class="line"><span class="comment">		console.log(k);</span></span><br><span class="line"><span class="comment">		d[k].forEach(function(s) &#123;</span></span><br><span class="line"><span class="comment">			console.log("\t" + s);</span></span><br><span class="line"><span class="comment">		&#125;);</span></span><br><span class="line"><span class="comment">	&#125;</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// find methods that match a pattern</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">var</span> d = findMethods(<span class="regexp">/encrypt|decrypt/i</span>);</span><br><span class="line">	<span class="keyword">for</span> (k <span class="keyword">in</span> d) &#123;</span><br><span class="line">		<span class="built_in">console</span>.log(k);</span><br><span class="line">		d[k].forEach(<span class="function"><span class="keyword">function</span>(<span class="params">s</span>) </span>&#123;</span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">"\t"</span> + s);</span><br><span class="line">		&#125;);</span><br><span class="line">	&#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"> 	send(<span class="string">"error: Objective-C Runtime is not available!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用：./fridaDev.py -e bundleId</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id=&quot;83ae210b1d153c611e268b45b54e5f77d575212b&quot;, name=&quot;iPhone&quot;, type=&apos;usb&apos;)</span><br><span class="line"></span><br><span class="line">CMBCStandardiOSSipKeyboardVC</span><br><span class="line">	- setNeedEncrypt:</span><br><span class="line">	- getEncryptedDataWithError:</span><br><span class="line">	- needEncrypt</span><br><span class="line">	- initWithKeyboardType:needEncrypt:</span><br><span class="line">FireflySecurityUtil</span><br><span class="line">	+ qhd_FireflyRSAEncrypt:cerPath:</span><br><span class="line">	+ qhd_FireflyRSAEncrypt:publicKey:</span><br><span class="line">	+ qhd_aesDecrypt:key:vector:</span><br><span class="line">	+ qhd_aesEncrypt:key:vector:</span><br><span class="line">	+ aesEncrypt:key:vector:</span><br><span class="line">	+ aesDecrypt:key:vector:</span><br><span class="line">	+ FireflyRSAEncrypt:publicKey:</span><br><span class="line">	+ FireflyRSAEncrypt:cerPath:</span><br><span class="line">CMCCSafeManager</span><br><span class="line">	- getEncryptCode:</span><br><span class="line">	- decryptCode:</span><br><span class="line">	- getDecryptCode:</span><br><span class="line">	- encryptCode:</span><br><span class="line">	- encryptWithContent:</span><br><span class="line">	- decryptWithContent:</span><br><span class="line">FaceResult</span><br><span class="line">	- encryptRandom</span><br><span class="line">	- setEncryptRandom:</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h3 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h3><p>以某app为例介绍工具使用。</p>
+<p>登录界面<br><img src="/2018/11/30/iOS-Hook-FridaDev/2.png" alt></p>
+<p>登录数据包加密<br><img src="/2018/11/30/iOS-Hook-FridaDev/1.png" alt></p>
+<p>现在需要破解加解密，分两种方式：</p>
+<ol>
+<li>猜解加解密关键字定位加解密函数</li>
+<li>正向分析登录功能找到加解密逻辑</li>
+</ol>
+<h4 id="猜解"><a href="#猜解" class="headerlink" title="猜解"></a>猜解</h4><p>猜解的方式存在偶然性，不采用标准库加密或常规加解密命名的就很难找到。</p>
+<p>我们尝试使用fridaDev的<code>--enumerate</code>功能枚举加解密逻辑，修改<code>ios_enum.js</code>中的正则匹配枚举方法处代码，正则中修改为<code>encrypt|decrypt</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> d = findMethods(<span class="regexp">/encrypt|decrypt/i</span>);</span><br><span class="line"><span class="keyword">for</span> (k <span class="keyword">in</span> d) &#123;</span><br><span class="line">	<span class="built_in">console</span>.log(k);</span><br><span class="line">	d[k].forEach(<span class="function"><span class="keyword">function</span>(<span class="params">s</span>) </span>&#123;</span><br><span class="line">		<span class="built_in">console</span>.log(<span class="string">"\t"</span> + s);</span><br><span class="line">	&#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行脚本查看输出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id=&quot;83ae210b1d153c611e268b45b54e5f77d575212b&quot;, name=&quot;iPhone&quot;, type=&apos;usb&apos;)</span><br><span class="line"></span><br><span class="line">CMBCStandardiOSSipKeyboardVC</span><br><span class="line">    - setNeedEncrypt:</span><br><span class="line">    - getEncryptedDataWithError:</span><br><span class="line">    - needEncrypt</span><br><span class="line">    - initWithKeyboardType:needEncrypt:</span><br><span class="line">FireflySecurityUtil</span><br><span class="line">    + qhd_FireflyRSAEncrypt:cerPath:</span><br><span class="line">    + qhd_FireflyRSAEncrypt:publicKey:</span><br><span class="line">    + qhd_aesDecrypt:key:vector:</span><br><span class="line">    + qhd_aesEncrypt:key:vector:</span><br><span class="line">    + aesEncrypt:key:vector:</span><br><span class="line">    + aesDecrypt:key:vector:</span><br><span class="line">    + FireflyRSAEncrypt:publicKey:</span><br><span class="line">    + FireflyRSAEncrypt:cerPath:</span><br><span class="line">CMCCSafeManager</span><br><span class="line">    - getEncryptCode:</span><br><span class="line">    - decryptCode:</span><br><span class="line">    - getDecryptCode:</span><br><span class="line">    - encryptCode:</span><br><span class="line">    - encryptWithContent:</span><br><span class="line">    - decryptWithContent:</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>通过挨个排查或者你dump了界面UI知道view的controller类名，其实已经基本能猜测调用哪些相关加解密函数。</p>
+<p>如果你还是不确定哪个类里的那个方法被调用，没关系，我们通过trace功能追踪函数调用来确定具体使用哪个方法。</p>
+<p>修改<code>ios_trace.js</code>尾部代码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ObjC.available) &#123;</span><br><span class="line">	trace(<span class="string">"*[CMBCStandardiOSSipKeyboardVC *]"</span>);</span><br><span class="line">	trace(<span class="string">"*[FireflySecurityUtil *]"</span>);</span><br><span class="line">	trace(<span class="string">"*[CMCCSafeManager *]"</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"> 	send(<span class="string">"error: Objective-C Runtime is not available!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行代码后启动应用，点击登录查看此处log：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line">*** entered +[FireflySecurityUtil FireflyRSAEncrypt:publicKey:]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">FireflyRSAEncrypt: &#123;&quot;flag&quot;:&quot;0&quot;,&quot;ckey&quot;:&quot;AZWKLXOMREDGAKPMTIBHTKOBRVGKNBHC&quot;&#125;</span><br><span class="line">publicKey: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDFV+0lKbisYcFxEaalfN4DMc14fMVTZTFZB1X4MoZtEu6lFpVvmSZT4eaSgp1Vxol8HSsqFncxxtv/GXpqJ3kY1DghafKliSFfTkV1PYoHKGoUYVdwt/HubzQBcC3xh+xiZvspBWy4Bjal//HoHrBBN05R2ZFnU9obS4Xw+jKbOQIDAQAB</span><br><span class="line"></span><br><span class="line">*** entered +[FireflySecurityUtil stripPublicKeyHeader:]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">stripPublicKeyHeader: &lt;30819f30 0d06092a 864886f7 0d010101 05000381 8d003081 89028181 00c557ed 2529b8ac 61c17111 a6a57cde 0331cd78 7cc55365 31590755 f832866d 12eea516 956f9926 53e1e692 829d55c6 897c1d2b 2a167731 c6dbff19 7a6a2779 18d43821 69f2a589 215f4e45 753d8a07 286a1461 5770b7f1 ee6f3401 702df187 ec6266fb 29056cb8 0636a5ff f1e81eb0 41374e51 d9916753 da1b4b85 f0fa329b 39020301 0001&gt;</span><br><span class="line"></span><br><span class="line">retval: &lt;30818902 818100c5 57ed2529 b8ac61c1 7111a6a5 7cde0331 cd787cc5 53653159 0755f832 866d12ee a516956f 992653e1 e692829d 55c6897c 1d2b2a16 7731c6db ff197a6a 277918d4 382169f2 a589215f 4e45753d 8a07286a 14615770 b7f1ee6f 3401702d f187ec62 66fb2905 6cb80636 a5fff1e8 1eb04137 4e51d991 6753da1b 4b85f0fa 329b3902 03010001&gt;</span><br><span class="line"></span><br><span class="line">*** exiting +[FireflySecurityUtil stripPublicKeyHeader:]</span><br><span class="line"></span><br><span class="line">retval: NrbG9/JxK65OMfl9WsFmCYU5Xfr1Av6Q/XOulxeoDc5CSf2AajFgE3CSH6MVHD3YlqCq4/Z20PevpakS1LMjsIpiywsOsrrfDESr87ATJ3Ta4TuGfg7ooLwAbUVHh77a4ZJInEaz63cpZuviy5b/fsftGjqllWtqxATNjU3dRBI=</span><br><span class="line"></span><br><span class="line">*** exiting +[FireflySecurityUtil FireflyRSAEncrypt:publicKey:]</span><br><span class="line"></span><br><span class="line">*** entered +[FireflySecurityUtil isJailBreak]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">retval: 0x1</span><br><span class="line"></span><br><span class="line">*** exiting +[FireflySecurityUtil isJailBreak]</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">*** entered -[FireflySecurityUtil aesToken]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">retval: AZWKLXOMREDGAKPM5pblzNXaVqAXmBwl</span><br><span class="line"></span><br><span class="line">*** exiting -[FireflySecurityUtil aesToken]</span><br><span class="line"></span><br><span class="line">*** entered +[FireflySecurityUtil aesEncrypt:key:vector:]</span><br><span class="line"></span><br><span class="line">Caller: 0x1840de580 CoreFoundation!__invoking___</span><br><span class="line"></span><br><span class="line">aesEncrypt: &#123;&quot;secRan&quot;:&quot;W9zvEM&quot;,&quot;staffId&quot;:&quot;F&quot;,&quot;password&quot;:&quot;NmQk8hKN9Sn1UTQha4JnAxYnfJiUGdwTw+Lws9rWHhsXgBt2ZARjOfrxH3Ka166Wias83OROXYjof6NvZ9zMJaKAP1NBPsiWZEE7gkRDlpCKwR\/AVMwOzA4xAFcb7WKWIWrJg7NjpsvMvsjxzqxx\/2sR4zglTx8P6jpHWigCEf0=&quot;,&quot;imeiCode&quot;:&quot;3823ACEE-A647-46F8-8D14-8065E5C2B0C6&quot;,&quot;validateImgCode&quot;:&quot;&quot;&#125;</span><br><span class="line">key: AZWKLXOMREDGAKPM5pblzNXaVqAXmBwl</span><br><span class="line">vector: 1234567812345678</span><br><span class="line"></span><br><span class="line">retval: yUF8H3QiqR21mTIrNxTTRtNx4l2IAyJ6AT0r7ATs9vO5MgYCahUT3qRxrT+qWDhyDD2znN5t1esauWYHPt+2AAd4NrfcYVs/QPMOstjpGcp4wey1HssAYNk2OtAKz5lRo6Bnw8CFiKMWdpdBS5Y4/G80irK0Dq12oPc52I956UtP3zCFNqE2rfQFZqcd35FA0CajccT5Ny6v/qKoScApnTLBmTKMmj3na+PTzyIOLXr1ObjwY9C+Snygf4xzb9AEU73WbIjxhsfdG6m3mEGrugw8Gn3nj/Eqb3mREUkvsQMt9FezDd4PWnJTRM6r6D5S5WI7ACYJU8kYDF0VK4H0Ixpe+xNoLdtYabgtcoSd9zkTFADW/SY6JzJaa6BwHpWoBeOree/dRgr6xyA8H4Zphw==</span><br><span class="line"></span><br><span class="line">*** exiting +[FireflySecurityUtil aesEncrypt:key:vector:]</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>可以看到点击登录后调用<code>+[FireflySecurityUtil FireflyRSAEncrypt:publicKey:]</code>对cKey加密，调用<code>+[FireflySecurityUtil aesEncrypt:key:vector:]</code>对请求数据进行aes加密，成功定位数据加解密函数。</p>
+<p>你甚至可以直接在trace代码中写:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">trace(&quot;*[ *ncrypt*]&quot;);</span><br></pre></td></tr></table></figure>
+<p>同样可以动态定位加密函数。</p>
+<h4 id="正向分析"><a href="#正向分析" class="headerlink" title="正向分析"></a>正向分析</h4><p>从界面入手找到登录view对应的controller，或者登录button对应的action，可以通过cycript或者lldb方式:</p>
+<p><img src="/2018/11/30/iOS-Hook-FridaDev/3.png" alt></p>
+<p>但是我们现在使用fridaDev来确定登录逻辑入口</p>
+<p>首先使用fridaDev的ui功能dump页面，通过登录button找到对应action。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">[*] Device info: Device(id="33010c846ea011df002c0781f922a10c9f2aca48", name="iPad 4", type='usb')</span><br><span class="line"></span><br><span class="line">&lt;UIWindow: <span class="number">0x146007e40</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); gestureRecognizers = &lt;NSArray: <span class="number">0x146009290</span>&gt;; layer = &lt;UIWindowLayer: <span class="number">0x146007dc0</span>&gt;&gt;</span><br><span class="line">   | &lt;UILayoutContainerView: <span class="number">0x144d629d0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; gestureRecognizers = &lt;NSArray: <span class="number">0x14602c450</span>&gt;; layer = &lt;CALayer: <span class="number">0x144d63ac0</span>&gt;&gt;</span><br><span class="line">   |    | &lt;UINavigationTransitionView: <span class="number">0x146026be0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); clipsToBounds = YES; autoresize = W+H; layer = &lt;CALayer: <span class="number">0x146023cf0</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;UIViewControllerWrapperView: <span class="number">0x144f6fd50</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; layer = &lt;CALayer: <span class="number">0x144f6f2e0</span>&gt;&gt;</span><br><span class="line">   |    |    |    | &lt;UIView: <span class="number">0x14602d3a0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); autoresize = W+H; layer = &lt;CALayer: <span class="number">0x144d49060</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    | &lt;UIImageView: <span class="number">0x144f390a0</span>; frame = (<span class="number">0</span> <span class="number">0</span>; <span class="number">320</span> <span class="number">480</span>); opaque = NO; layer = &lt;CALayer: <span class="number">0x144f24d10</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    | &lt;UIImageView: <span class="number">0x144f33530</span>; frame = (<span class="number">30.5</span> <span class="number">145.5</span>; <span class="number">259</span> <span class="number">189</span>); alpha = <span class="number">0.8</span>; opaque = NO; layer = &lt;CALayer: <span class="number">0x144f03d00</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    | &lt;FireflyUserNameTextFieldView: 0x144f34260; baseClass = UITextField; frame = (19 26; 221 32); text = ''; clipsToBounds = YES; opaque = NO; gestureRecognizers = &lt;NSArray: 0x144f72190&gt;; layer = &lt;CALayer: 0x144f39a50&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UIImageView: <span class="number">0x146032820</span>; frame = (<span class="number">10</span> <span class="number">7</span>; <span class="number">18.5</span> <span class="number">18.5</span>); opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x146032670</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UITextFieldLabel: 0x146033470; frame = (48 0; 193 32); text = '请输入员工号'; opaque = NO; userInteractionEnabled = NO; layer = &lt;_UILabelLayer: 0x146033680&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    |    | &lt;_UILabelContentLayer: <span class="number">0x14606e1d0</span>&gt; (layer)</span><br><span class="line">   |    |    |    |    |    |    | &lt;CSJCMBCCDSIPInputField: 0x146034e00; baseClass = UITextField; frame = (19 77; 221 32.5); text = ''; clipsToBounds = YES; opaque = NO; gestureRecognizers = &lt;NSArray: 0x144f74e20&gt;; layer = &lt;CALayer: 0x146034460&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UIImageView: <span class="number">0x144f6bae0</span>; frame = (<span class="number">10</span> <span class="number">7</span>; <span class="number">18.5</span> <span class="number">18.5</span>); opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x144f2f1b0</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UITextFieldLabel: 0x144f6d060; frame = (48 0; 193 32); text = '请输入密码'; opaque = NO; userInteractionEnabled = NO; layer = &lt;_UILabelLayer: 0x144f6d270&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    |    | &lt;_UILabelContentLayer: <span class="number">0x14606f280</span>&gt; (layer)</span><br><span class="line">   |    |    |    |    |    |    | &lt;FireflyButton: <span class="number">0x144f6e6c0</span>; baseClass = UIButton; frame = (<span class="number">38</span> <span class="number">120.5</span>; <span class="number">183</span> <span class="number">34</span>); clipsToBounds = YES; opaque = NO; layer = &lt;CALayer: <span class="number">0x144f6d690</span>&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    | &lt;UIButtonLabel: 0x1460665c0; frame = (73.5 6.5; 36 21.5); text = '登录'; opaque = NO; userInteractionEnabled = NO; layer = &lt;_UILabelLayer: 0x1460667e0&gt;&gt;</span><br><span class="line">   |    |    |    |    |    |    |    |    | &lt;_UILabelContentLayer: <span class="number">0x144f67e20</span>&gt; (layer)</span><br><span class="line">   |    | &lt;UINavigationBar: <span class="number">0x144da8880</span>; frame = (<span class="number">0</span> <span class="number">20</span>; <span class="number">320</span> <span class="number">44</span>); opaque = NO; autoresize = W; tintColor = UIDeviceWhiteColorSpace <span class="number">1</span> <span class="number">1</span>; gestureRecognizers = &lt;NSArray: <span class="number">0x14602ddd0</span>&gt;; layer = &lt;CALayer: <span class="number">0x1460279d0</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;_UINavigationBarBackground: <span class="number">0x146026f60</span>; frame = (<span class="number">0</span> <span class="number">-20</span>; <span class="number">320</span> <span class="number">64</span>); opaque = NO; autoresize = W; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x14602b8b0</span>&gt;&gt;</span><br><span class="line">   |    |    |    | &lt;UIImageView: <span class="number">0x144db8f10</span>; frame = (<span class="number">0</span> <span class="number">64</span>; <span class="number">320</span> <span class="number">0</span>); opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x146023e00</span>&gt;&gt;</span><br><span class="line">   |    |    | &lt;_UINavigationBarBackIndicatorView: <span class="number">0x14602cab0</span>; frame = (<span class="number">8</span> <span class="number">11.5</span>; <span class="number">13</span> <span class="number">21</span>); alpha = <span class="number">0</span>; opaque = NO; userInteractionEnabled = NO; layer = &lt;CALayer: <span class="number">0x144da7510</span>&gt;&gt;</span><br><span class="line">&lt;CSNavJViewController <span class="number">0x1450fe000</span>&gt;, state: appeared, view: &lt;UILayoutContainerView <span class="number">0x144d629d0</span>&gt;</span><br><span class="line">   | &lt;FireflyTestLoginViewController <span class="number">0x144f37c30</span>&gt;, state: appeared, view: &lt;UIView <span class="number">0x14602d3a0</span>&gt;</span><br><span class="line">a <span class="number">0x144f6e6c0</span></span><br><span class="line">-&gt; loginButtonClick</span><br><span class="line">c <span class="number">0x144f6e6c0</span></span><br><span class="line">-&gt; &lt;FireflyTestLoginViewController: <span class="number">0x144f37c30</span>&gt;</span><br></pre></td></tr></table></figure>
+<p>可以看到button对应的controller为<code>FireflyTestLoginViewController</code>类，button动作为<code>loginButtonClick</code>。</p>
+<p>剩下就是根据IDA&amp;Hopper静态分析Math-O，配合fridaDev trace摸清函数调用栈的工作了，当然你也可以使用lldb调试bt打印堆栈来分析函数调用。</p>
+<p><img src="/2018/11/30/iOS-Hook-FridaDev/5.png" alt></p>
+<p>顺藤你会一步步摸到加解密逻辑的瓜。</p>
+<p><img src="/2018/11/30/iOS-Hook-FridaDev/4.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Frida/" rel="tag"># Frida</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/12/iOS逆向笔记/" rel="next" title="iOS逆向笔记">
+                <i class="fa fa-chevron-left"></i> iOS逆向笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/03/Blockchain-Security-Articles/" rel="prev" title="Blockchain Security Articles">
+                Blockchain Security Articles <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Dino">
+            
+              <p class="site-author-name" itemprop="name">Dino</p>
+              <p class="site-description motion-element" itemprop="description">Just make more records and write more fucking code.</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/houugen/" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:lzm-6121@163.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#FridaDev"><span class="nav-number">1.</span> <span class="nav-text">FridaDev</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#功能"><span class="nav-number">1.1.</span> <span class="nav-text">功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#list"><span class="nav-number">1.1.1.</span> <span class="nav-text">list</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#info"><span class="nav-number">1.1.2.</span> <span class="nav-text">info</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ui（仅支持iOS）"><span class="nav-number">1.1.3.</span> <span class="nav-text">ui（仅支持iOS）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dynhook"><span class="nav-number">1.1.4.</span> <span class="nav-text">dynhook</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#trace"><span class="nav-number">1.1.5.</span> <span class="nav-text">trace</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#enumerate"><span class="nav-number">1.1.6.</span> <span class="nav-text">enumerate</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实例"><span class="nav-number">1.2.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#猜解"><span class="nav-number">1.2.1.</span> <span class="nav-text">猜解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#正向分析"><span class="nav-number">1.2.2.</span> <span class="nav-text">正向分析</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Dino</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="Total Visitors">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="Total Views">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: true,
+        appId: 'bpY55FCnEUmy6J6kSjxdcejt-gzGzoHsz',
+        appKey: 'PR1fCVsYGEkCOD4mf9wNKbTu',
+        placeholder: '搞基',
+        avatar:'monsterid',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/cropped-favicon-512.png?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="0x00 Info绝对的随机在Ethereum中很难实现，因为所有参数都可以在透明的链上查询，因此想要利用随机特性生成逻辑很容易出现bug，本篇就介绍DASP中第六类漏洞–不安全的随机性。">
+<meta name="keywords" content="BlockChain,DASP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="#DASP# Bad Randomness (6)">
+<meta property="og:url" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/index.html">
+<meta property="og:site_name" content="Dino&#39;s blog">
+<meta property="og:description" content="0x00 Info绝对的随机在Ethereum中很难实现，因为所有参数都可以在透明的链上查询，因此想要利用随机特性生成逻辑很容易出现bug，本篇就介绍DASP中第六类漏洞–不安全的随机性。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/1.png">
+<meta property="og:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/2.png">
+<meta property="og:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/3.png">
+<meta property="og:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/4.png">
+<meta property="og:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/5.png">
+<meta property="og:updated_time" content="2019-02-21T08:51:22.478Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="#DASP# Bad Randomness (6)">
+<meta name="twitter:description" content="0x00 Info绝对的随机在Ethereum中很难实现，因为所有参数都可以在透明的链上查询，因此想要利用随机特性生成逻辑很容易出现bug，本篇就介绍DASP中第六类漏洞–不安全的随机性。">
+<meta name="twitter:image" content="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/1.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>#DASP# Bad Randomness (6) | Dino's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Dino's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://houugen.github.io/2018/08/09/DASP-Bad-Randomness-6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Dino">
+      <meta itemprop="description" content="Just make more records and write more fucking code.">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Dino's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">#DASP# Bad Randomness (6)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-08-09 15:17:12" itemprop="dateCreated datePublished" datetime="2018-08-09T15:17:12+00:00">2018-08-09</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/区块链/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/09/DASP-Bad-Randomness-6/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">Comments: </span> <span class="post-comments-count valine-comment-count" data-xid="/2018/08/09/DASP-Bad-Randomness-6/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="0x00-Info"><a href="#0x00-Info" class="headerlink" title="0x00 Info"></a>0x00 Info</h2><p>绝对的随机在Ethereum中很难实现，因为所有参数都可以在透明的链上查询，因此想要利用随机特性生成逻辑很容易出现bug，本篇就介绍DASP中第六类漏洞–<a href="https://www.dasp.co/#item-6" target="_blank" rel="noopener">不安全的随机性</a>。</p>
+<a id="more"></a>
+<h2 id="0x01-错误实践"><a href="#0x01-错误实践" class="headerlink" title="0x01 错误实践"></a>0x01 错误实践</h2><p>Solidity本身提供一些获取“随机值”的方法和变量，你可以在<a href="http://solidity.readthedocs.io/en/v0.4.21/units-and-global-variables.html" target="_blank" rel="noopener">官方文档</a>中查看。但是这些“随机值”（在链上公开）如果不当的作为生成随机数的因子或种子，那随机数就可以被预测。</p>
+<p>根据DASP提供的实例我们看看有哪些坑。</p>
+<p><strong>第一种</strong><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">uint256 private seed;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">play</span>(<span class="params"></span>) <span class="title">public</span> <span class="title">payable</span> </span>&#123;</span><br><span class="line">    <span class="built_in">require</span>(msg.value &gt;= <span class="number">1</span> ether);</span><br><span class="line">    iteration++;</span><br><span class="line">    uint randomNumber = uint(keccak256(seed + iteration));</span><br><span class="line">    <span class="keyword">if</span> (randomNumber % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        msg.sender.transfer(<span class="keyword">this</span>.balance);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>利用私有变量seed和iteration通过keccak256 hash计算得到随机数，虽然seed属性为private，但是它也要在某个时间点设置，可以通过链上相关tx来获取其值，因此随机性可预测。</p>
+<p><strong>第二种</strong><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">play</span>(<span class="params"></span>) <span class="title">public</span> <span class="title">payable</span> </span>&#123;</span><br><span class="line">    <span class="built_in">require</span>(msg.value &gt;= <span class="number">1</span> ether);</span><br><span class="line">    <span class="keyword">if</span> (block.blockhash(blockNumber) % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">        msg.sender.transfer(<span class="keyword">this</span>.balance);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里使用<code>block.blockhash(blockNumber)</code>来计算随机数，这里必须强调的是，在solidity中，<code>block.blockhash(uint blockNumber) returns (bytes32)</code>只计算就近的256个块hash，如果blockNumber为当前块（block.number）或者超过256更久远的块，计算结果都是0.</p>
+<blockquote>
+<p>block.blockhash(uint blockNumber) returns (bytes32): hash of the given block - only works for 256 most recent blocks excluding current</p>
+</blockquote>
+<blockquote>
+<p>The block hashes are not available for all blocks for scalability reasons. You can only access the hashes of the most recent 256 blocks, all other values will be zero.</p>
+</blockquote>
+<p>同时Solidity文档也强调尽量不要使用<code>block.timestamp</code>、<code>now</code>和<code>block.blockhash</code>计算随机数。</p>
+<blockquote>
+<p>Do not rely on block.timestamp, now and block.blockhash as a source of randomness, unless you know what you are doing.</p>
+<p>Both the timestamp and the block hash can be influenced by miners to some degree. Bad actors in the mining community can for example run a casino payout function on a chosen hash and just retry a different hash if they did not receive any money.</p>
+</blockquote>
+<ul>
+<li><code>block.timestamp (uint)</code>: current block timestamp as seconds since unix epoch</li>
+<li><code>now (uint)</code>: current block timestamp (alias for <code>block.timestamp</code>)</li>
+<li><code>block.blockhash(uint blockNumber) returns (bytes32)</code>: hash of the given block - only works for 256 most recent blocks excluding current</li>
+</ul>
+<h2 id="0x02-案例"><a href="#0x02-案例" class="headerlink" title="0x02 案例"></a>0x02 案例</h2><p>我们先来看两个DASP提供的真实案例。</p>
+<h3 id="SmartBillions"><a href="#SmartBillions" class="headerlink" title="SmartBillions"></a>SmartBillions</h3><p>披露：<a href="https://www.reddit.com/r/ethereum/comments/74d3dc/smartbillions_lottery_contract_just_got_hacked/" target="_blank" rel="noopener">SmartBillions lottery contract just got hacked!</a></p>
+<p><a href="https://smartbillions.com" target="_blank" rel="noopener">SmartBillions</a>是一个赌博合约（<a href="https://etherscan.io/address/0x5ace17f87c7391e5792a7683069a8025b83bbd85" target="_blank" rel="noopener">Contract Source Code</a>），本身是一个ICO项目。玩法是下注6位数，每位范围0-15，猜中2位以上会获得相应奖励。根据论坛作者supr3m的披露，该合约本身存在随机数漏洞，黑客利用触发2次漏洞取走合约中400ETH，在后续要利用漏洞全部取走资金时，ICO利用后门函数冻结资金防止资金被盗。这个后门函数也被作者吐槽，怀疑ICO会利用后门集资卷款跑路。</p>
+<p>我们先看下黑客利用合约漏洞做的tx</p>
+<ol>
+<li>合约执行标签可以看到两笔200ETH的操作<br><img src="/2018/08/09/DASP-Bad-Randomness-6/1.png" alt></li>
+<li>在4337369块，合约0x5ace17f87c7391e5792a7683069a8025b83bbd85向0x6245c1804F7fCEB305A60BBb5cb6E18F939EDB69账户地址转200ETH，我们看下该地址的TX<br><img src="/2018/08/09/DASP-Bad-Randomness-6/2.png" alt></li>
+<li>黑客首先在4337096块调用合约playSystem(uint _hash, address _partner)函数，第一个参数000001为下注的6位数<br><img src="/2018/08/09/DASP-Bad-Randomness-6/3.png" alt></li>
+<li>然后再超过256块后的4337369块调用合约won()函数，赢得200ETH的二等奖金（猜中前5个下注数）<br><img src="/2018/08/09/DASP-Bad-Randomness-6/4.png" alt></li>
+<li>在第二步的蓝框中黑客还想继续利用同样手法赢得一等奖金（6个下注数全中）</li>
+</ol>
+<p>根据论坛作者描述和黑客操作，审计合约后，发现漏洞是在playSystem()中的won()函数中，根据player.blockNum的hash和下注的数字做比对，而这种hash在超过256个块后结果为0，因此黑客押的000001和hash结果000000前5位一致而得到二等奖。</p>
+<h3 id="theRun"><a href="#theRun" class="headerlink" title="theRun"></a>theRun</h3><p><a href="https://medium.com/@hrishiolickel/why-smart-contracts-fail-undiscovered-bugs-and-what-we-can-do-about-them-119aa2843007" target="_blank" rel="noopener">#timestamp dependence bug</a><br><a href="https://etherscan.io/address/0xcac337492149bdb66b088bf5914bedfbf78ccc18#code" target="_blank" rel="noopener">Contract Source Code</a></p>
+<p>合约中利用random(unit Max)函数进行随机数生成，而生成因子主要是利用block.timestamp和block.number，而时间戳可以由矿工操控，故矿工可以选择有利的随机数来提高获取奖励的概率。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Participate</span>(<span class="params">uint deposit</span>) <span class="title">private</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Winning the Pot :) Condition : paying at least 1 people with deposit &gt; 2 ether and having luck !</span></span><br><span class="line">    <span class="keyword">if</span>(  ( deposit &gt; <span class="number">1</span> ether ) &amp;&amp; (deposit &gt; players[Payout_id].payout) )&#123; </span><br><span class="line">        uint roll = random(<span class="number">100</span>); <span class="comment">//take a random number between 1 &amp; 100</span></span><br><span class="line">        <span class="keyword">if</span>( roll % <span class="number">10</span> == <span class="number">0</span> )&#123; <span class="comment">//if lucky : Chances : 1 out of 10 ! </span></span><br><span class="line">            msg.sender.send(WinningPot); <span class="comment">// Bravo !</span></span><br><span class="line">            WinningPot=<span class="number">0</span>;</span><br><span class="line">        &#125;    </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">uint256 constant private salt =  block.timestamp;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">random</span>(<span class="params">uint Max</span>) <span class="title">constant</span> <span class="title">private</span> <span class="title">returns</span> (<span class="params">uint256 result</span>)</span>&#123;</span><br><span class="line">    <span class="comment">//get the best seed for randomness</span></span><br><span class="line">    uint256 x = salt * <span class="number">100</span> / Max;</span><br><span class="line">    uint256 y = salt * block.number / (salt % <span class="number">5</span>) ;</span><br><span class="line">    uint256 seed = block.number/<span class="number">3</span> + (salt % <span class="number">300</span>) + Last_Payout +y; </span><br><span class="line">    uint256 h = uint256(block.blockhash(seed)); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> uint256((h / x)) % Max + <span class="number">1</span>; <span class="comment">//random number between 1 and Max</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>接着我们研究下受随机数漏洞影响的当下最火游戏合约Fomo3D。</p>
+<h3 id="Fomo3D"><a href="#Fomo3D" class="headerlink" title="Fomo3D"></a>Fomo3D</h3><blockquote>
+<p>这是一个叫JUST的团队开发的以太坊游戏，just在英文中有“公正、正义”的意思，然而游戏从UI界面到游戏说明充满了恶搞和对人性贪婪的讽刺，比如推荐链接在游戏中就叫“坏建议”，开发团队并不避讳这是一个乐透game，声称这是一次大型社会学实验。</p>
+</blockquote>
+<p><strong>这个游戏本身就是一个庞氏骗局，各位看官三思而后入！</strong></p>
+<p><a href="https://exitscam.me/" target="_blank" rel="noopener">游戏官网</a><br><a href="https://zhuanlan.zhihu.com/p/40306713" target="_blank" rel="noopener">游戏玩法介绍</a><br><a href="https://etherscan.io/address/0xa62142888aba8370742be823c1782d17a0389da1#code" target="_blank" rel="noopener">FoMo3Dlong Source Code</a></p>
+<p>而漏洞发现的起因也非常有趣，Fomo3D游戏的开发者在twitter上@V神，说发现一个EVM上核弹级漏洞，结果被Ethereum团队leader回怼，并且顺手找了一个Fomo3D游戏漏洞^_^<br>故事经过在文章<a href="https://www.peckshield.com/2018/07/24/fomo3d/" target="_blank" rel="noopener">Pwning Fomo3D Revealed: Iterative, Pre-Calculated Contract Creation For Airdrop Prizes!</a>中有介绍，并且描述了Fomo3D漏洞。</p>
+<p>根据文章描述Fomo3D存在两个漏洞导致被薅羊毛。</p>
+<p><strong>第一个漏洞–错误的访问控制检查：</strong><br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">modifier isHuman() &#123;</span><br><span class="line">    address _addr = msg.sender;</span><br><span class="line">    uint256 _codeLength;</span><br><span class="line">    </span><br><span class="line">    assembly &#123;<span class="attr">_codeLength</span> := extcodesize(_addr)&#125;</span><br><span class="line">    <span class="built_in">require</span>(_codeLength == <span class="number">0</span>, <span class="string">"sorry humans only"</span>);</span><br><span class="line">    _;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>FoMo3Dlong合约使用isHuman()函数判断调用者是一个外部账户还是一个合约地址，核心利用<code>assembly {_codeLength := extcodesize(_addr)}</code>判断，其中关键函数<code>extcodesize(a)</code>代表a地址上的代码大小，如果等于0，则代表一个外部账户，非0则代表合约地址，本身很好理解。<br>但这样判断有个风险，在<a href="https://medium.com/@matthewdif/mechanism-design-security-in-smart-contracts-87f08555b38b" target="_blank" rel="noopener">Mechanism Design Security in Smart Contracts</a>一文中提到：</p>
+<blockquote>
+<p>NOTE: Do not use the EXTCODESIZE check to prevent smart contracts from calling a function. This is not foolproof, it can be subverted by a constructor call, due to the fact that while the constructor is running, EXTCODESIZE for that address returns 0.</p>
+</blockquote>
+<p>例：合约A中有函数funA使用如上的访问控制，当你在一个合约B的构造函数（constructor()）中调用合约A中的funA，可绕过访问控制成功调用，尽管B是一个合约。extcodesize(B_addr) return 0.</p>
+<p>我们可以通过remix验证这一点：<br>合约A，主要功能是判断调用者是外部账户(返回false)还是合约账户(返回true)：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">contract A &#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">isContract</span>(<span class="params"></span>) <span class="title">public</span> <span class="title">returns</span> (<span class="params">bool isContract</span>)</span>&#123;</span><br><span class="line">      uint32 size;</span><br><span class="line">      address _addr = msg.sender;</span><br><span class="line">      assembly &#123;</span><br><span class="line">        size := extcodesize(_addr)</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> (size &gt; <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>发布合约A并将合约A地址写入合约B，合约B分别在构造函数内外去调用合约A的isContract()函数，通过log查看返回值：<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">interface demoInterface &#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">isContract</span>(<span class="params"></span>) <span class="title">external</span> <span class="title">returns</span> (<span class="params">bool</span>);</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">contract</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    event LogConstructor(bool);</span><br><span class="line">    event Logb(bool);</span><br><span class="line">    <span class="keyword">constructor</span>() public &#123;</span><br><span class="line">        demoInterface demo= demoInterface(<span class="number">0xdc544654fefd1a458eb24064a6c958b14e579154</span>);</span><br><span class="line">        emit LogConstructor(demo.isContract());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">b</span>(<span class="params"></span>) <span class="title">public</span> </span>&#123;</span><br><span class="line">        demoInterface demo= demoInterface(<span class="number">0xdc544654fefd1a458eb24064a6c958b14e579154</span>);</span><br><span class="line">        emit Logb(demo.isContract());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>发布合约B并且调用方法b，对比下log中打印的返回值<br><img src="/2018/08/09/DASP-Bad-Randomness-6/5.png" alt><br>可以看到在构造函数中调用其他合约受控（extcodesize()）的方法可以绕过访问控制。</p>
+<p><strong>第二个漏洞–可预测的随机数：</strong><br>Fomo3D中你在花钱买key的时候会有一定几率获得空投。<br><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">airdrop</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">        <span class="title">private</span> </span></span><br><span class="line"><span class="function">        <span class="title">view</span> </span></span><br><span class="line"><span class="function">        <span class="title">returns</span>(<span class="params">bool</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    uint256 seed = uint256(keccak256(abi.encodePacked(</span><br><span class="line">        </span><br><span class="line">        (block.timestamp).add</span><br><span class="line">        (block.difficulty).add</span><br><span class="line">        ((uint256(keccak256(abi.encodePacked(block.coinbase)))) / (now)).add</span><br><span class="line">        (block.gaslimit).add</span><br><span class="line">        ((uint256(keccak256(abi.encodePacked(msg.sender)))) / (now)).add</span><br><span class="line">        (block.number)</span><br><span class="line">        </span><br><span class="line">    )));</span><br><span class="line">    <span class="keyword">if</span>((seed - ((seed / <span class="number">1000</span>) * <span class="number">1000</span>)) &lt; airDropTracker_)</span><br><span class="line">        <span class="keyword">return</span>(<span class="literal">true</span>);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span>(<span class="literal">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到随机数种子seed的计算是由当前块的信息加上msg.sender构成，而攻击者可以在合适的时间计算得到小于airDropTracker_的seed，从而保证100%获取空投奖励。</p>
+<p>文章描述攻击步骤可以总结为：</p>
+<blockquote>
+</blockquote>
+<pre><code>1. Pre-calculate the address X of the next contract that the attacker address is about to create;
+2. If X can’t be used to generate a good seed with the current airDropTracker_, goto step 1;
+3. Create contract at address X;
+4. Invoke buyXid() function from X to win the airdrop prize;
+5. Invoke withdraw() function from X to get earnings calculated by the airdrop prize;
+</code></pre><blockquote>
+<p>这里还有个知识点是<a href="https://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed" target="_blank" rel="noopener">如何计算以太坊合约地址</a>，读者可以去主动学习。</p>
+</blockquote>
+<p><a href="https://www.reddit.com/r/ethereum/comments/916xni/how_to_pwn_fomo3d_a_beginners_guide/" target="_blank" rel="noopener">How to PWN FoMo3D, a beginners guide</a> 同样提供了漏洞分析及exp利用。</p>
+<h2 id="0x03-最佳实践"><a href="#0x03-最佳实践" class="headerlink" title="0x03 最佳实践"></a>0x03 最佳实践</h2><p>在<a href="https://blog.positive.com/predicting-random-numbers-in-ethereum-smart-contracts-e5358c6b8620" target="_blank" rel="noopener">Predicting Random Numbers in Ethereum Smart Contracts</a>一文中，调研3k+合约发现43个合约存在随机数可被预测的问题，其主要由4类漏洞产生：</p>
+<ul>
+<li>PRNGs using block variables as a source of entropy</li>
+<li>PRNGs based on a blockhash of some past block</li>
+<li>PRNGs based on a blockhash of a past block combined with a seed deemed private</li>
+<li>PRNGs prone to front-running（后续文章会讲到）</li>
+</ul>
+<p>同时也描述了如何实现更安全随机数的3中方法：</p>
+<ul>
+<li>External oracles</li>
+<li>Signidice</li>
+<li>Commit–reveal approach</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/BlockChain/" rel="tag"># BlockChain</a>
+          
+            <a href="/tags/DASP/" rel="tag"># DASP</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/09/DASP-Denial-of-Services-6/" rel="next" title="#DASP# Denial of Services (5)">
+                <i class="fa fa-chevron-left"></i> #DASP# Denial of Services (5)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/16/DASP-Front-Running-7/" rel="prev" title="#DASP# Front Running (7)">
+                #DASP# Front Running (7) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Dino">
+            
+              <p class="site-author-name" itemprop="name">Dino</p>
+              <p class="site-description motion-element" itemprop="description">Just make more records and write more fucking code.</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/houugen/" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:lzm-6121@163.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-Info"><span class="nav-number">1.</span> <span class="nav-text">0x00 Info</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-错误实践"><span class="nav-number">2.</span> <span class="nav-text">0x01 错误实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-案例"><span class="nav-number">3.</span> <span class="nav-text">0x02 案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SmartBillions"><span class="nav-number">3.1.</span> <span class="nav-text">SmartBillions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#theRun"><span class="nav-number">3.2.</span> <span class="nav-text">theRun</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fomo3D"><span class="nav-number">3.3.</span> <span class="nav-text">Fomo3D</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-最佳实践"><span class="nav-number">4.</span> <span class="nav-text">0x03 最佳实践</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Dino</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="Total Visitors">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="Total Views">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: true,
+        appId: 'bpY55FCnEUmy6J6kSjxdcejt-gzGzoHsz',
+        appKey: 'PR1fCVsYGEkCOD4mf9wNKbTu',
+        placeholder: '搞基',
+        avatar:'monsterid',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

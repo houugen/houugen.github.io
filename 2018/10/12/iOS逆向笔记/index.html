@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/cropped-favicon-512.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/cropped-favicon-512.png?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="iOS系统安全架构 安全启动链 信任链：系统启动 -&amp;gt; boot rom -&amp;gt; LLB -&amp;gt; iBoot -&amp;gt; kernal   系统软件授权 固件 -&amp;gt; cpu -&amp;gt; itunes ==&amp;gt; 服务器验证 低版本服务器返回验证许可，可通过保存shsh绕过验证 高版本返回验证许可+随机串     应用代码签名 所有可执行代码（动态库，动态资源）运行时验证签名">
+<meta name="keywords" content="iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS逆向笔记">
+<meta property="og:url" content="https://houugen.github.io/2018/10/12/iOS逆向笔记/index.html">
+<meta property="og:site_name" content="Dino&#39;s blog">
+<meta property="og:description" content="iOS系统安全架构 安全启动链 信任链：系统启动 -&amp;gt; boot rom -&amp;gt; LLB -&amp;gt; iBoot -&amp;gt; kernal   系统软件授权 固件 -&amp;gt; cpu -&amp;gt; itunes ==&amp;gt; 服务器验证 低版本服务器返回验证许可，可通过保存shsh绕过验证 高版本返回验证许可+随机串     应用代码签名 所有可执行代码（动态库，动态资源）运行时验证签名">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-02-21T08:51:22.506Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS逆向笔记">
+<meta name="twitter:description" content="iOS系统安全架构 安全启动链 信任链：系统启动 -&amp;gt; boot rom -&amp;gt; LLB -&amp;gt; iBoot -&amp;gt; kernal   系统软件授权 固件 -&amp;gt; cpu -&amp;gt; itunes ==&amp;gt; 服务器验证 低版本服务器返回验证许可，可通过保存shsh绕过验证 高版本返回验证许可+随机串     应用代码签名 所有可执行代码（动态库，动态资源）运行时验证签名">
+
+
+
+
+
+
+  <link rel="canonical" href="https://houugen.github.io/2018/10/12/iOS逆向笔记/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>iOS逆向笔记 | Dino's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Dino's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>Search</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://houugen.github.io/2018/10/12/iOS逆向笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Dino">
+      <meta itemprop="description" content="Just make more records and write more fucking code.">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Dino's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS逆向笔记
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-12 14:52:00" itemprop="dateCreated datePublished" datetime="2018-10-12T14:52:00+00:00">2018-10-12</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/iOS/" itemprop="url" rel="index"><span itemprop="name">iOS</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/10/12/iOS逆向笔记/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">Comments: </span> <span class="post-comments-count valine-comment-count" data-xid="/2018/10/12/iOS逆向笔记/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             Views:  
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="iOS系统安全架构"><a href="#iOS系统安全架构" class="headerlink" title="iOS系统安全架构"></a>iOS系统安全架构</h2><ol>
+<li>安全启动链<ul>
+<li>信任链：系统启动 -&gt; boot rom -&gt; LLB -&gt; iBoot -&gt; kernal</li>
+</ul>
+</li>
+<li>系统软件授权<ul>
+<li>固件 -&gt; cpu -&gt; itunes ==&gt; 服务器验证<ul>
+<li>低版本服务器返回验证许可，可通过保存shsh绕过验证</li>
+<li>高版本返回验证许可+随机串</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>应用代码签名<ul>
+<li>所有可执行代码（动态库，动态资源）运行时验证签名</li>
+</ul>
+</li>
+<li>运行时进程安全<ul>
+<li>沙盒：/var/mobile/Containers/Data/Application/[GUID]</li>
+<li>DEP</li>
+<li>ASLR    </li>
+</ul>
+</li>
+<li>数据加密保护<ul>
+<li>硬件秘钥 + 密码秘钥 -&gt; 类秘钥</li>
+<li>硬件秘钥 -&gt; 文件系统秘钥</li>
+<li>类秘钥 + 文件系统秘钥 -&gt; 文件秘钥 =&gt; <strong>文件内容</strong></li>
+</ul>
+</li>
+</ol>
+<a id="more"></a>
+<h2 id="越狱"><a href="#越狱" class="headerlink" title="越狱"></a>越狱</h2><ol>
+<li>Cydia Substrate<ul>
+<li>MobileHooker</li>
+<li>MobileLoader</li>
+<li>safe mode</li>
+</ul>
+</li>
+<li><p>ssh连接ios设备</p>
+<ul>
+<li><p>openssh</p>
+<ul>
+<li>ssh root@ip</li>
+</ul>
+</li>
+<li><p>通过usb连接：</p>
+<ol>
+<li><a href="cgit.sukimashita.com/usbmuxd.git/snapshot/usbmuxd-1.0.8.tar.gz">usbmuxd</a> -&gt; tcpreplay.py -t 22:xx</li>
+<li>brew install libimobiledevice -&gt; iproxy 2222 22</li>
+</ol>
+<ul>
+<li>ssh root@localhost -p xx</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>ssh key不匹配，删除.ssh/know_hosts对应可以即可</p>
+</blockquote>
+<ul>
+<li><p>配置免密码登录越狱设备</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa -P <span class="string">''</span></span><br><span class="line">ssh-copy-id -i /Users/username/.ssh/id_rsa root@ip</span><br><span class="line">或者安装sshpass自己设置密码:</span><br><span class="line">brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>终端输入中文</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /var/root</span><br><span class="line">touch .inputrc</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'set convert-meta off'</span> &gt;&gt; .inputrc</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'set meta-flag on'</span> &gt;&gt; .inputrc</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'set output-meta on'</span> &gt;&gt; .inputrc</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'set input-meta on'</span> &gt;&gt; .inputrc</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>插件</p>
+<ol>
+<li>ps：安装adv-cmds</li>
+<li>绕过app签名：安装appsync</li>
+<li>文件显示：<a href="https://yalujailbreak.net/apple-file-conduit-2-ios-11/" target="_blank" rel="noopener">安装apple file conduit 2</a></li>
+<li>fileza</li>
+</ol>
+</li>
+</ol>
+<blockquote>
+<p>越狱工具 <a href>next.tweakboxapp.com</a></p>
+</blockquote>
+<h2 id="app文件结构和构建"><a href="#app文件结构和构建" class="headerlink" title="app文件结构和构建"></a>app文件结构和构建</h2><ol>
+<li>查看符号表：nm -nm</li>
+<li>依赖库、汇编等：otool -L / -tV</li>
+<li>从源代码到ipa的构建过程</li>
+</ol>
+<h2 id="数据存储"><a href="#数据存储" class="headerlink" title="数据存储"></a>数据存储</h2><ol>
+<li>property list<ul>
+<li>plutil -convert xml1 xx -o xx.plist</li>
+</ul>
+</li>
+<li>User Defaults<ul>
+<li>sandbox -&gt; Library -&gt; Preferences -&gt; xx.plist</li>
+</ul>
+</li>
+<li>Archive</li>
+<li>Database<ul>
+<li>sqlite</li>
+</ul>
+</li>
+<li>keyChain<ul>
+<li><a href="https://github.com/ptoomey3/Keychain-Dumper" target="_blank" rel="noopener">Keychain Dumper</a></li>
+</ul>
+</li>
+</ol>
+<h2 id="Runtime"><a href="#Runtime" class="headerlink" title="Runtime"></a>Runtime</h2><h2 id="Hook"><a href="#Hook" class="headerlink" title="Hook"></a>Hook</h2><ol>
+<li><p>Method Swizzle</p>
+<p>针对objective-C，利用runtime，替换Dispatch table中SEL和IMP的对应关系。</p>
+<ul>
+<li><a href="https://www.google.co.jp/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=2ahUKEwifib7x-ZneAhUJvrwKHQRNCBsQFjAAegQICRAB&amp;url=https%3A%2F%2Fwww.jianshu.com%2Fp%2Fff19c04b34d0&amp;usg=AOvVaw0Gl7o95OB0WBZ73DrZ4FP8" target="_blank" rel="noopener">IOS黑魔法－Method Swizzling</a></li>
+<li><a href="http://blog.leichunfeng.com/blog/2015/06/14/objective-c-method-swizzling-best-practice/" target="_blank" rel="noopener">Objective-C Method Swizzling 的最佳实践</a></li>
+<li><a href="http://swift.gg/2016/03/29/effective-method-swizzling-with-swift/" target="_blank" rel="noopener">如何在 Swift 中高效地使用 Method Swizzling</a></li>
+</ul>
+</li>
+<li><p>fishhook</p>
+<p>rebind_symbols：遍历查找懒加载表和非懒加载表的符号并替换地址。</p>
+<ul>
+<li><a href="https://github.com/facebook/fishhook" target="_blank" rel="noopener">https://github.com/facebook/fishhook</a></li>
+</ul>
+</li>
+<li>Cydia Substrate<ul>
+<li>MSHookMessageEx -&gt; objC<ul>
+<li>replace Objective-C message implementations</li>
+</ul>
+</li>
+<li>MSHookFunction -&gt; c<ul>
+<li>hijack native code to your own implementation</li>
+</ul>
+</li>
+<li><a href="http://iphonedevwiki.net/index.php/Cydia_Substrate" target="_blank" rel="noopener">http://iphonedevwiki.net/index.php/Cydia_Substrate</a></li>
+</ul>
+</li>
+</ol>
+<h2 id="ARM汇编"><a href="#ARM汇编" class="headerlink" title="ARM汇编"></a>ARM汇编</h2><p>push {r0}  &lt;==&gt;  str r0,[sp,#-4]!</p>
+<p>pop {r0}   &lt;==&gt;  ldr r0,[sp],#4 </p>
+<blockquote>
+<p>汇编使用intel模式：<a href="https://github.com/vadimcn/vscode-lldb/issues/87" target="_blank" rel="noopener">https://github.com/vadimcn/vscode-lldb/issues/87</a></p>
+<p>模拟器使用x86架构，32位入栈。64位rdi、rsi、rdx、rcx、r8、r9，多余参数入栈。</p>
+<p>真机arm架构，32位r0-3，64位w0-8。</p>
+</blockquote>
+<h2 id="Mach-O"><a href="#Mach-O" class="headerlink" title="Mach-O"></a>Mach-O</h2><ol>
+<li><p>文件架构</p>
+<blockquote>
+<p>lipo -info whatsApp</p>
+</blockquote>
+<blockquote>
+<p>file whatsApp</p>
+</blockquote>
+<ul>
+<li><p>Header</p>
+<blockquote>
+<p>otool -hv whatsApp</p>
+</blockquote>
+<blockquote>
+<p>MachOView</p>
+<ul>
+<li>魔数<ul>
+<li>通用格式：0xcafebabe</li>
+<li>armv7：0xfeedface</li>
+<li>arm64：0xfeedfacf</li>
+</ul>
+</li>
+<li>文件类型<ul>
+<li>OBJECT：1</li>
+<li>EXECUTE：2</li>
+<li>DYLIB：6</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+</li>
+<li><p>Load commands -&gt; n * Segment</p>
+<blockquote>
+<p>otool -lv whatsApp</p>
+<ul>
+<li>(lldb) image list -e -f</li>
+<li>Load commands -&gt; LC_SEGMENT(_TEXT) -&gt; VM address</li>
+<li>加载地址 + 段虚拟地址 = 文件加载地址</li>
+</ul>
+</blockquote>
+</li>
+<li>Data -&gt; n * Section</li>
+<li><p>Mach-O动态链接（延迟加载）</p>
+<p>* </p>
+</li>
+<li><p>Code Signature</p>
+<ul>
+<li>codesign -dvvvv whatsApp</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="App签名"><a href="#App签名" class="headerlink" title="App签名"></a>App签名</h2><ol>
+<li>查看加密标识：<ul>
+<li>otool -l whatsApp | grep crypt</li>
+</ul>
+</li>
+<li>查看电脑中证书<ul>
+<li>security find-identity -v -p codesigning</li>
+</ul>
+</li>
+<li>获取描述文件（embedded.mobileprovision）<ul>
+<li>苹果官网获取</li>
+<li>新建工程真机安装后在包中获取</li>
+<li>查看：security cms -D -i embedded.mobileprovision</li>
+<li>拷贝至要签名文件中</li>
+</ul>
+</li>
+<li>生成授权文件<ul>
+<li>security cms -D -i embedded.mobileprovision &gt; entitlements_full.plist</li>
+<li>/usr/libexec/PlistBuddy -x -c ‘Print:Entitlements’  entitlements_full.plist &gt; entitlements.plist</li>
+</ul>
+</li>
+<li>重签名<ul>
+<li>codesign -fs “iPhone Developer: xxx（2中证书名）” –no-strict –entitlements=xxx（4中授权文件） Payload/xxx.app<ul>
+<li>如果有extension，可删可重签名</li>
+<li>如果新加动态库，需要签名</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>压缩为ipa<ul>
+<li>zip -qr target.ipa Payload</li>
+</ul>
+</li>
+</ol>
+<h2 id="动态库"><a href="#动态库" class="headerlink" title="动态库"></a>动态库</h2><ol>
+<li>clang编译objec并签名，放入Library-&gt;load dylibrary-&gt;DynamicLibaries中</li>
+<li>导出和隐藏符号<ul>
+<li>static</li>
+<li>export_list</li>
+<li>-fvisibility=hidden</li>
+</ul>
+</li>
+<li>函数调用顺序<ol>
+<li>__attribute__((constructor))</li>
+<li>main</li>
+<li>__attribute__((destructor))</li>
+</ol>
+</li>
+<li>基于c++动态库</li>
+<li>基于oc动态库</li>
+<li>注入可执行文件<ul>
+<li>LC_LOAD_DYLIB</li>
+<li>工具: <a href="https://github.com/Tyilo/insert_dylib" target="_blank" rel="noopener">insert_dylib</a></li>
+<li>查看：otool -L</li>
+</ul>
+</li>
+</ol>
+<h2 id="应用砸壳"><a href="#应用砸壳" class="headerlink" title="应用砸壳"></a>应用砸壳</h2><ol>
+<li>查看加壳<ul>
+<li>otool -l xx(mach-o) | grep cryptid<ul>
+<li>从itools导出ipa</li>
+<li>利用scp导出执行文件（打开app，ps找到进程）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>砸壳工具<ul>
+<li><a href="https://github.com/stefanesser/dumpdecrypted" target="_blank" rel="noopener">dumpdecrypted</a><ul>
+<li>查找Document路径:<ol>
+<li>cycript -p WeChat</li>
+<li>NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES)[0] </li>
+</ol>
+</li>
+</ul>
+</li>
+<li><a href="https://github.com/AloneMonkey/dumpdecrypted" target="_blank" rel="noopener">AloneMonkey/dumpdecrypted</a></li>
+<li><a href="https://github.com/KJCracks/Clutch" target="_blank" rel="noopener">Clutch</a> </li>
+<li><a href="https://github.com/AloneMonkey/frida-ios-dump" target="_blank" rel="noopener">frida-ios-dump</a></li>
+</ul>
+</li>
+</ol>
+<h2 id="class-dump"><a href="#class-dump" class="headerlink" title="class-dump"></a>class-dump</h2><ol>
+<li><p><a href="https://github.com/nygard/class-dump" target="_blank" rel="noopener">https://github.com/nygard/class-dump</a></p>
+<p>官方工具修正后编译：</p>
+<p>CDObjectiveC2Processor.m  224h </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">objc2Class.data       = value &amp; ~3;   //error: value &amp; ~7;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>./class-dump mach-o_file -H -o ./Headers</p>
+</li>
+</ol>
+<blockquote>
+<p>通过 lipo mach-o_file -thin armv7 -output mach-o_file.armv7 瘦身提取砸壳架构</p>
+</blockquote>
+<h2 id="Reveal"><a href="#Reveal" class="headerlink" title="Reveal"></a>Reveal</h2><ol>
+<li>cydia中添加BigBoss源安装Reveal2Loader，开启reveal使用</li>
+<li><p>高版本<a href="https://www.52pojie.cn/thread-762028-1-1.html" target="_blank" rel="noopener">reveal</a>需要将RevealServer（help-&gt;show reveal library in finder-&gt;ios library）重命名为libReveal.dylib，并和libReveal.plist一同放入ios的Library-&gt;MobileSubstrate-&gt;DynamicLibraries中</p>
+<p>plist文件内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; Filter = &#123; Bundles = ( &quot;bundleID&quot; ); &#125;; &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><a href="https://github.com/AloneMonkey/MonkeyDev" target="_blank" rel="noopener">MonkeyDev</a></p>
+</li>
+</ol>
+<h2 id="cycript"><a href="#cycript" class="headerlink" title="cycript"></a>cycript</h2><ol>
+<li><a href="http://www.cycript.org/" target="_blank" rel="noopener">cycript</a></li>
+</ol>
+<h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><ol>
+<li>工具<ul>
+<li>hopper</li>
+<li>IDA</li>
+</ul>
+</li>
+<li>arm汇编，结构体！</li>
+</ol>
+<h2 id="动态调试"><a href="#动态调试" class="headerlink" title="动态调试"></a>动态调试</h2><ol>
+<li>处理debugserver<ul>
+<li>下载/Developer/usr/bin/debugserver</li>
+<li>授权文件entitlements.plist内容：<ul>
+<li>com.apple.springboard.debugapplications </li>
+<li>run-unsigned-code</li>
+<li>get-task-allow</li>
+<li>task_for_pid-allow</li>
+</ul>
+</li>
+<li>签名</li>
+<li>上传至/usr/bin/debugserver</li>
+</ul>
+</li>
+<li><p>lldb + debugserver</p>
+<ul>
+<li><p>连接</p>
+<ol>
+<li>映射端口： python tcpreply.py -t 22:2222 1234:1234</li>
+<li>手机：debugserver *:1234 -a WhatsApp</li>
+<li>pc： llvm –&gt; process connect connect://localhost:1234</li>
+</ol>
+</li>
+<li><p>调试指令</p>
+<ul>
+<li>image list -o -f</li>
+<li>b -[xx xxx]</li>
+<li>br s -a 0xaaaaaa</li>
+<li>po $r0</li>
+<li>p/x $r0</li>
+<li>x/s $r1</li>
+<li>register read </li>
+<li>memory read</li>
+<li>br list /  br com add 1.1  : DONE</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>xcode调试</p>
+<ol>
+<li>新建与app同名工程</li>
+<li><a href="https://github.com/AloneMonkey/iOSREBook/blob/master/chapter-5/5.2%20%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95/Snapchat/pack.sh" target="_blank" rel="noopener">运行脚本</a></li>
+<li>run</li>
+<li>安装<a href="https://github.com/facebook/chisel" target="_blank" rel="noopener">chisel</a></li>
+</ol>
+<p>or</p>
+<p>使用 <strong>MokeyDev</strong></p>
+<blockquote>
+<p>ps: 定位button的action事件</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>传统:<ol>
+<li>[btn allTargets]    //xxx</li>
+<li>[btn allControlEvents]    //yyy</li>
+<li>[btn actionsForTarget:xxx forControlEvent:yyy]</li>
+</ol>
+</li>
+<li>使用chisel:</li>
+</ul>
+<ol>
+<li>pviews</li>
+<li>pactions btn</li>
+</ol>
+</blockquote>
+</li>
+</ol>
+<h2 id="Theos"><a href="#Theos" class="headerlink" title="Theos"></a>Theos</h2><ol>
+<li><p>tweak</p>
+<ol>
+<li>执行$THEOS/bin/nic.pl创建工程</li>
+<li><p>编写hook代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">%hook ViewController</span><br><span class="line"></span><br><span class="line">-(void)clickme:(id)sender&#123;</span><br><span class="line">	NSLog(@&quot;Click me hooked !!!&quot;);</span><br><span class="line">	%log;</span><br><span class="line">	%orig;  //执行原方法</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">%end</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编译</p>
+<ul>
+<li>make</li>
+<li>make package</li>
+<li>make install</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>iOSOpenDev（13年没更新了）</li>
+<li><a href="https://github.com/AloneMonkey/MonkeyDev" target="_blank" rel="noopener">MonkeyDev</a></li>
+</ol>
+<blockquote>
+<p>查看Log输出</p>
+</blockquote>
+<blockquote>
+<p>安装libimobiledevice工具(需要<a href="https://github.com/flutter/flutter/issues/22595" target="_blank" rel="noopener">usbmuxd</a>):</p>
+</blockquote>
+<blockquote>
+<p>brew install –HEAD libimobiledevice</p>
+</blockquote>
+<blockquote>
+<p>使用如下命令查看输出Log:</p>
+</blockquote>
+<blockquote>
+<p>idevicesyslog | grep ‘xxx’</p>
+</blockquote>
+<blockquote>
+<p>或者使用自带的console.app程序查看。</p>
+</blockquote>
+<h2 id="Oplayer-lite-去广告"><a href="#Oplayer-lite-去广告" class="headerlink" title="Oplayer lite 去广告"></a>Oplayer lite 去广告</h2><ol>
+<li>使用frida-ios-dump砸壳</li>
+<li>用class-dump导出头文件</li>
+<li>用reveal定位广告view</li>
+<li>用xcode lldb调试找到广告的addSubview:调用位置</li>
+<li>使用hooper静态分析逻辑</li>
+<li>用Theos写插件改变逻辑去广告</li>
+</ol>
+<h2 id="SnapChat-消息"><a href="#SnapChat-消息" class="headerlink" title="SnapChat 消息"></a>SnapChat 消息</h2><p>tips：</p>
+<ul>
+<li>使用cycript或者reveal找到view对应的viewcontroller</li>
+<li>通过theos的logify.pl hook一个类所有方法找到具体调用</li>
+<li>通过lldb打印具体调用的执行堆栈 – bt</li>
+<li>tweak找不到类可以通过声明@class xxx解决</li>
+</ul>
+<h2 id="迁移到非越狱设备"><a href="#迁移到非越狱设备" class="headerlink" title="迁移到非越狱设备"></a>迁移到非越狱设备</h2><h2 id="Frida"><a href="#Frida" class="headerlink" title="Frida"></a>Frida</h2><h2 id="数据加密"><a href="#数据加密" class="headerlink" title="数据加密"></a>数据加密</h2><ul>
+<li>字符串加密</li>
+<li>数据存储加密</li>
+<li>网络数据加密</li>
+</ul>
+<h2 id="反调试与反注入"><a href="#反调试与反注入" class="headerlink" title="反调试与反注入"></a>反调试与反注入</h2><ul>
+<li><p>反调试</p>
+<ul>
+<li><p>ptrace</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ptrace(PT_DENY_ATTACH, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> *handle = dlopen(<span class="number">0</span>, RTLD_GLOBAL | RTLD_NOW);</span><br><span class="line">   <span class="keyword">ptrace_ptr_t</span> ptrace_ptr = (<span class="keyword">ptrace_ptr_t</span>)dlsym(handle, <span class="string">"ptrace"</span>);</span><br><span class="line">   ptrace_ptr(PT_DENY_ATTACH, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>sysctl</p>
+<p>使用sysctl获取当前进程，标志位p_flag对比P_TRACED</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">BOOL <span class="title">isDebuggerPresent</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> name[<span class="number">4</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kinfo_proc</span> <span class="title">info</span>;</span></span><br><span class="line">    <span class="keyword">size_t</span> info_size = <span class="keyword">sizeof</span>(info);</span><br><span class="line">    </span><br><span class="line">    info.kp_proc.p_flag = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    name[<span class="number">0</span>] = CTL_KERN;</span><br><span class="line">    name[<span class="number">1</span>] = KERN_PROC;</span><br><span class="line">    name[<span class="number">2</span>] = KERN_PROC_PID;</span><br><span class="line">    name[<span class="number">3</span>] = getpid();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(sysctl(name, <span class="number">4</span>, &amp;info, &amp;info_size, <span class="literal">NULL</span>, <span class="number">0</span>) == <span class="number">-1</span>)&#123;</span><br><span class="line">        NSLog(@<span class="string">"sysctl error..."</span>);</span><br><span class="line">        <span class="keyword">return</span> NO;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> ((info.kp_proc.p_flag &amp; P_TRACED) != <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>syscall</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">syscall(<span class="number">26</span>, <span class="number">31</span> , <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>反反调试</p>
+<p>通过<a href="https://github.com/AloneMonkey/iOSREBook/blob/master/chapter-8/8.3%20%E5%8A%A8%E6%80%81%E4%BF%9D%E6%8A%A4/AntiAntiDebug/AntiAntiDebug.m" target="_blank" rel="noopener">fish hook</a></p>
+<ul>
+<li>hook ptrace</li>
+<li>hook dlsym</li>
+<li>hook syscall</li>
+<li>hook sysctl        </li>
+</ul>
+</li>
+<li><p>反注入</p>
+<ul>
+<li><p>编译加入标志位</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null</span><br></pre></td></tr></table></figure>
+<p>原理，增加__RESTRICT这个section</p>
+<p>dylib的注入一般是通过DYLD_INSERT_LIBRARIES这个环境变量来实现的，在<a href="http://www.opensource.apple.com/source/dyld/dyld-210.2.3/src/dyld.cpp" target="_blank" rel="noopener">dyld源码</a>中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">case restrictedBySegment:</span><br><span class="line">        dyld::log(&quot;main executable (%s) has __RESTRICT/__restrict section\n&quot;, sExecPath);</span><br><span class="line">        break;</span><br></pre></td></tr></table></figure>
+<p>故存在该分段即可忽略DYLD_开头的环境变量，从而防止dylib注入。</p>
+</li>
+<li><p>检测加载动态库路径中是否有DynamicLibraries（测试没用）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">BOOL isInjected0()&#123;</span><br><span class="line">    int count = _dyld_image_count();</span><br><span class="line">    if(count &gt; 0)&#123;</span><br><span class="line">        for(int i=0; i&lt;count; i++)&#123;</span><br><span class="line">            const char* dyld = _dyld_get_image_name(i);</span><br><span class="line">            if(strstr(dyld, &quot;DynamicLibraries&quot;))&#123;</span><br><span class="line">                return YES;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return NO;</span><br><span class="line">    &#125;</span><br><span class="line">    return NO;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>检测是否存在环境变量DYLD_INSERT_LIBRARIES（测试有用）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">BOOL isInjected1()&#123;</span><br><span class="line">    char* env = getenv(&quot;DYLD_INSERT_LIBRARIES&quot;);</span><br><span class="line">    if(env)</span><br><span class="line">        return YES;</span><br><span class="line">    return NO;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>反反注入</p>
+<p>修改mach-o文件中__RESTRICT字段中restrict字符串为其他字符串</p>
+</li>
+</ul>
+<h2 id="混淆"><a href="#混淆" class="headerlink" title="混淆"></a>混淆</h2><ul>
+<li><p>类名和方法名混淆</p>
+<ul>
+<li>宏定义替换<ul>
+<li>ios-class-guard</li>
+</ul>
+</li>
+<li><p>直接替换MachO文件</p>
+<ol>
+<li>修改 __objc_classname</li>
+<li>修改 __objc_methname</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>OLLVM<br>​    </li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/23/Blockchain-WordCloud/" rel="next" title="Blockchain WordCloud">
+                <i class="fa fa-chevron-left"></i> Blockchain WordCloud
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/30/iOS-Hook-FridaDev/" rel="prev" title="iOS Hook FridaDev">
+                iOS Hook FridaDev <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Dino">
+            
+              <p class="site-author-name" itemprop="name">Dino</p>
+              <p class="site-description motion-element" itemprop="description">Just make more records and write more fucking code.</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/houugen/" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:lzm-6121@163.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#iOS系统安全架构"><span class="nav-number">1.</span> <span class="nav-text">iOS系统安全架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#越狱"><span class="nav-number">2.</span> <span class="nav-text">越狱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#app文件结构和构建"><span class="nav-number">3.</span> <span class="nav-text">app文件结构和构建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据存储"><span class="nav-number">4.</span> <span class="nav-text">数据存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Runtime"><span class="nav-number">5.</span> <span class="nav-text">Runtime</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hook"><span class="nav-number">6.</span> <span class="nav-text">Hook</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARM汇编"><span class="nav-number">7.</span> <span class="nav-text">ARM汇编</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mach-O"><span class="nav-number">8.</span> <span class="nav-text">Mach-O</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#App签名"><span class="nav-number">9.</span> <span class="nav-text">App签名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态库"><span class="nav-number">10.</span> <span class="nav-text">动态库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用砸壳"><span class="nav-number">11.</span> <span class="nav-text">应用砸壳</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class-dump"><span class="nav-number">12.</span> <span class="nav-text">class-dump</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reveal"><span class="nav-number">13.</span> <span class="nav-text">Reveal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cycript"><span class="nav-number">14.</span> <span class="nav-text">cycript</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#静态分析"><span class="nav-number">15.</span> <span class="nav-text">静态分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态调试"><span class="nav-number">16.</span> <span class="nav-text">动态调试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Theos"><span class="nav-number">17.</span> <span class="nav-text">Theos</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Oplayer-lite-去广告"><span class="nav-number">18.</span> <span class="nav-text">Oplayer lite 去广告</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SnapChat-消息"><span class="nav-number">19.</span> <span class="nav-text">SnapChat 消息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#迁移到非越狱设备"><span class="nav-number">20.</span> <span class="nav-text">迁移到非越狱设备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Frida"><span class="nav-number">21.</span> <span class="nav-text">Frida</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据加密"><span class="nav-number">22.</span> <span class="nav-text">数据加密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#反调试与反注入"><span class="nav-number">23.</span> <span class="nav-text">反调试与反注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#混淆"><span class="nav-number">24.</span> <span class="nav-text">混淆</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Dino</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="Total Visitors">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="Total Views">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: true,
+        appId: 'bpY55FCnEUmy6J6kSjxdcejt-gzGzoHsz',
+        appKey: 'PR1fCVsYGEkCOD4mf9wNKbTu',
+        placeholder: '搞基',
+        avatar:'monsterid',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
