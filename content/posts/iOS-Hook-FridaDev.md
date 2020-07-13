@@ -1,8 +1,8 @@
 ---
-title: iOS Hook FridaDev
+title: "iOS Hook FridaDev"
 date: 2018-11-30 09:52:00
-tags: [iOS,Frida]
-categories: [iOS]
+tags: ["iOS","Frida"]
+categories: ["iOS"]
 ---
 
 

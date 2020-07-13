@@ -1,8 +1,8 @@
 ---
-title: iOS逆向笔记
+title: "iOS逆向笔记"
 date: 2018-10-12 14:52:00
-tags: [iOS]
-categories: [iOS]
+tags: ["iOS"]
+categories: ["iOS"]
 ---
 
 ## iOS系统安全架构
@@ -288,6 +288,7 @@ objc2Class.data       = value & ~3;   //error: value & ~7;
   * 使用chisel:
   	1. pviews
   	2. pactions btn
+
     {{< /admonition >}}
 
 ## Theos

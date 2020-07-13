@@ -1,8 +1,8 @@
 ---
-title:  内嵌React的android应用流量加解密
+title:  "内嵌React的android应用流量加解密"
 date:  2018-05-31 16:59:14
-tags:  [burp,react-native]
-categories:  [android网络]
+tags:  ["burp","react-native"]
+categories:  ["android网络"]
 ---
 
 ## 0x00 背景

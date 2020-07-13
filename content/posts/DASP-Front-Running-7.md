@@ -1,8 +1,8 @@
 ---
-title: '#DASP# Front Running (7)'
+title: "#DASP# Front Running (7)"
 date: 2018-08-16 14:58:48
-tags: [BlockChain, DASP]
-categories: [区块链]
+tags: ["BlockChain", "DASP"]
+categories: ["区块链"]
 ---
 
 ## 0x00 Info

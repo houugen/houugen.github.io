@@ -1,6 +1,7 @@
-baseURL = "http://example.org/"
+baseURL = "http://houugen.fun/"
 defaultContentLanguage = "en"
 languageCode = "en"
+
 theme = "LoveIt"
 
 uglyurls = true
@@ -9,6 +10,8 @@ enableEmoji = true
 
 [params]
   version = "0.2.X"
+  description = "This is Houugen's Hugo Site"
+  defaultTheme = "dark"
 
   [params.search]
     enable = true
@@ -44,13 +47,7 @@ enableEmoji = true
     icp = ""
     license = 'Houugen'
 
-  [params.section]
-    paginate = 20
-    dateFormat = "01-02"
-    rss = 10
-
   [params.home]
-    rss = 10
     [params.home.profile]
       enable = true
       gravatarEmail = ""
@@ -67,8 +64,9 @@ enableEmoji = true
 
   [params.social]
     GitHub = "https://github.com/"
-    Twitter = "xxxx"
+    Twitter = "https://twitter.com/Dino_Boom_"
     Email = "lzm-6121@163.com"
+    RSS = false
 
   [params.page]
     [params.page.toc]
@@ -81,7 +79,6 @@ enableEmoji = true
     [params.page.comment]
       enable = true
       # Valine comment config (https://github.com/xCss/Valine)
-      # Valine 评论系统设置 (https://github.com/xCss/Valine)
       [params.page.comment.valine]
         enable = true
         appId = "QhRivi4Qm3PjvD0WoqEiJv5n-gzGzoHsz"

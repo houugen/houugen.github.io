@@ -1,8 +1,8 @@
 ---
-title: '#DASP# Reentrancy (1)'
+title: "#DASP# Reentrancy (1)"
 date: 2018-07-20 09:51:56
-tags: [BlockChain, DASP]
-categories: [区块链]
+tags: ["BlockChain", "DASP"]
+categories: ["区块链"]
 ---
 
 ## 0x00 Info

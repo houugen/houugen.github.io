@@ -1,8 +1,8 @@
 ---
-title: Blockchain WordCloud
+title: "Blockchain WordCloud"
 date: 2018-08-23 15:05:02
-tags: [BlockChain]
-categories: [区块链]
+tags: ["BlockChain"]
+categories: ["区块链"]
 ---
 
 区块链安全云词

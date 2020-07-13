@@ -1,8 +1,8 @@
 ---
-title: '#DASP# Bad Randomness (6)'
+title: "#DASP# Bad Randomness (6)"
 date: 2018-08-09 15:17:12
-tags: [BlockChain, DASP]
-categories: [区块链]
+tags: ["BlockChain", "DASP"]
+categories: ["区块链"]
 ---
 
 ## 0x00 Info

@@ -1,8 +1,8 @@
 ---
-title: '#DASP# Arithmetic Issues (3)'
+title: "#DASP# Arithmetic Issues (3)"
 date: 2018-07-25 09:20:55
-tags: [BlockChain, DASP]
-categories: [区块链]
+tags: ["BlockChain", "DASP"]
+categories: ["区块链"]
 ---
 
 ## 0x00 Info

@@ -1,8 +1,8 @@
 ---
-title: android网络请求&证书认证
+title: "android网络请求&证书认证"
 date: 2018-03-24 15:14:58
-tags: [https,sslpinning]
-categories: [android网络]
+tags: ["https","sslpinning"]
+categories: ["android网络"]
 ---
 ## 0x00 目的
 

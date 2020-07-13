@@ -1,8 +1,8 @@
 ---
-title: '#DASP# Short Addresses (9)'
+title: "#DASP# Short Addresses (9)"
 date: 2018-08-20 15:40:14
-tags: [BlockChain, DASP]
-categories: [区块链]
+tags: ["BlockChain", "DASP"]
+categories: ["区块链"]
 ---
 
 ## 0x00 Info
