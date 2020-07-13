@@ -44,6 +44,4 @@ jobs:
           ALGOLIA_ADMIN_KEY: ${{ secrets.ALGOLIA_ADMIN_KEY }}
           ALGOLIA_INDEX_NAME: houugen_blog
           ALGOLIA_INDEX_FILE: public/index.json
-        run: npm install atomic-algolia
-        run: atomic-algolia
-
+        run: npm install atomic-algolia && atomic-algolia
