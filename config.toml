@@ -4,7 +4,8 @@ languageCode = "en"
 
 theme = "LoveIt"
 
-uglyurls = true
+relativeURLs = "true"
+uglyURLs = "true"
 enableRobotsTXT = true
 enableEmoji = true
 
