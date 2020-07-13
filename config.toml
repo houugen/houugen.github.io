@@ -105,6 +105,14 @@ enableEmoji = true
         # "assets/data/emoji/"
         emoji = ""
 
+  [params.section]
+    # special amount of posts in each section page
+    paginate = 20
+    # date format (month and day)
+    dateFormat = "01-02"
+    # amount of RSS pages
+    rss = 10
+
 [author]
   name = "Houugen"
   email = ""
