@@ -38,13 +38,13 @@ jobs:
           publish_branch: master
           cname: houugen.fun
 
-      - name: Setup Algolia
+      - name: Update Algolia Index
         env:
           ALGOLIA_APP_ID: 63ROI1DYLO
           ALGOLIA_ADMIN_KEY: ${{ secrets.ALGOLIA_ADMIN_KEY }}
           ALGOLIA_INDEX_NAME: houugen_blog
           ALGOLIA_INDEX_FILE: public/index.json
         run: 
-          npm install atomic-algolia -g
-          atomic-algolia
+          npm install atomic-algolia
+          npm run algolia
 
