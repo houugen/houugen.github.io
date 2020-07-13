@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-node@v2.1.0
         with:
           node-version: '12.x'
-      - run: npm install atomic-algolia
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
@@ -45,5 +44,6 @@ jobs:
           ALGOLIA_ADMIN_KEY: ${{ secrets.ALGOLIA_ADMIN_KEY }}
           ALGOLIA_INDEX_NAME: houugen_blog
           ALGOLIA_INDEX_FILE: public/index.json
-        run: npm run algolia
+        run: npm install atomic-algolia
+        run: atomic-algolia
 
