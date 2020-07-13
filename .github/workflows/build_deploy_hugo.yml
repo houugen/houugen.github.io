@@ -6,7 +6,7 @@ on:
 
 jobs:
   build_deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
       - name: Checkout
@@ -14,8 +14,14 @@ jobs:
         with:
           ref: 'hugo'
           submodules: true
+          fetch-depth: 0
 
-      - name: Setup hugo
+      - name: Setup Node
+        uses: actions/setup_node@v2.1.0
+        with:
+          node-version: '12.x'
+
+      - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: 'latest'
@@ -30,3 +36,14 @@ jobs:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           publish_dir: ./public
           publish_branch: master
+
+      - name: Setup Algolia
+        env:
+          ALGOLIA_APP_ID: 63ROI1DYLO
+          ALGOLIA_ADMIN_KEY: ${{ secrets.ALGOLIA_ADMIN_KEY }}
+          ALGOLIA_INDEX_NAME: houugen_blog
+          ALGOLIA_INDEX_FILE: public/index.json
+        run: 
+          npm install atomic-algolia -g
+          atomic-algolia
+
