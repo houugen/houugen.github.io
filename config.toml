@@ -4,7 +4,6 @@ languageCode = "en"
 
 theme = "LoveIt"
 
-relativeURLs = "true"
 uglyURLs = "true"
 enableRobotsTXT = true
 enableEmoji = true
@@ -122,7 +121,7 @@ enableEmoji = true
     pre = ""
     post = ""
     name = "Posts"
-    url = "/posts/"
+    url = "/posts.html"
     title = ""
     weight = 1
   [[menu.main]]
@@ -130,7 +129,7 @@ enableEmoji = true
     pre = ""
     post = ""
     name = "Tags"
-    url = "/tags/"
+    url = "/tags.html"
     title = ""
     weight = 2
   [[menu.main]]
@@ -138,7 +137,7 @@ enableEmoji = true
     pre = ""
     post = ""
     name = "Categories"
-    url = "/categories/"
+    url = "/categories.html"
     title = ""
     weight = 3
 
