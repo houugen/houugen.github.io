@@ -65,6 +65,7 @@ delegatecall原型为：
 | 2. 执行失败返回fasle | 2. call的外部调用上下文是外部合约，而delegatecall的外部调用上下文是自身 |
 
 这里借图说话：
+
 ![](DASP-Access-Control-3/1.png)
 
 实例（可在[remix](https://remix.ethereum.org)操作）：
