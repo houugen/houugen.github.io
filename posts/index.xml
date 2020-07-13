@@ -1,5 +1,5 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>All Posts -</title><link>http://houugen.fun/posts.html</link><description>All Posts |</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Mon, 13 Jul 2020 17:44:54 +0800</lastBuildDate><atom:link href="http://houugen.fun/posts.html" rel="self" type="application/rss+xml"/><item><title>Blog From Hexo To Hugo</title><link>http://houugen.fun/posts/blog%E8%BF%81%E7%A7%BB.html</link><pubDate>Mon, 13 Jul 2020 17:44:54 +0800</pubDate><author>Author</author><guid>http://houugen.fun/posts/blog%E8%BF%81%E7%A7%BB.html</guid><description><![CDATA[最近逛Gayhub看到Hugo，不管框架怎么样，先进官网看主题，颜狗瞬间被皮肤所吸引，回头默默看了下自己的博客，不就是荣耀水晶皮肤和没皮肤的区别么！再浏览文档和上手体验后，竟然还体会到了+10点攻击力的感受，安装、配置、部署、主题、MD即显、Actions配套等处处体现Hugo的简洁、灵活和高效！
-随即开始了迁徙之路&hellip;
+随即开始了迁徙之路（主要是想换个皮提高下写Blog的动力）&hellip;
 安装 参照官档：
 https://gohugo.io/documentation/
 同时Hugo Demo站也提供了详尽文档：

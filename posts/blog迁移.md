@@ -3,7 +3,7 @@
 
 最近逛Gayhub看到Hugo，不管框架怎么样，先进官网看主题，颜狗瞬间被皮肤所吸引，回头默默看了下自己的博客，不就是荣耀水晶皮肤和没皮肤的区别么！再浏览文档和上手体验后，竟然还体会到了+10点攻击力的感受，安装、配置、部署、主题、MD即显、Actions配套等处处体现Hugo的简洁、灵活和高效！
 
-随即开始了迁徙之路...
+随即开始了迁徙之路（主要是想换个皮提高下写Blog的动力）...
 
 <!-- more -->
 
@@ -78,7 +78,7 @@ ALGOLIA_ADMIN_KEY为Algolia API Keys中的`Admin API Key`，将其值添加到Gi
     ├── Blockchain-WordCloud.md
     ```
   
-	但是迁移到Hugo后图片都无法显示，看了文档明白时路径问题，图片资源可以放在根路径的static中，这样文章图片是能显示，但是需要修改大量文章中的图片引用路径，查阅[资料](https://xiexingchao.ink/posts/post-image-path-problem-in-hugo.html)后发现可以在`config.toml`中插入`uglyurls = true`解决。
+	但是迁移到Hugo后图片都无法显示，看了文档明白是路径问题，图片资源可以放在根路径的static中，这样文章图片是能显示，但是需要修改大量文章中的图片引用路径，查阅[资料](https://xiexingchao.ink/posts/post-image-path-problem-in-hugo.html)后发现可以在`config.toml`中插入`uglyurls = true`解决。
 	
 	但是又引入了新Bug 😭，站头的`Posts`、`Tags`、`Categories`均无法正常解析了，在主题的issues搜索发现有解决方法：[https://github.com/dillonzq/LoveIt/issues/266](https://github.com/dillonzq/LoveIt/issues/266)
 
@@ -141,5 +141,5 @@ jobs:
 ## 感受
 
 1. 主题真的好看😂，而且又有很多实用功能，比如流程图、嵌入音视频、数学公式和Shortcodes等
-2. 之前Hexo用的travis，而Github Actions体验更加方便，配合各种action能清晰快捷的编写工作流
-3. Hugo的秒级部署不吹了，而且编写Markdown还能即时网页查看，舒服
+2. 之前Hexo用的travis自动部署，而Github Actions体验更加方便，配合各种action能清晰快捷的编写工作流
+3. Hugo的毫秒级部署不吹了，而且编写Markdown还能即时网页查看，舒服
