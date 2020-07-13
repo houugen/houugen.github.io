@@ -38,7 +38,7 @@ jobs:
           publish_branch: master
           cname: houugen.fun
 
-      - name: Update Algolia Index
+      - name: Setup Algolia
         env:
           ALGOLIA_APP_ID: 63ROI1DYLO
           ALGOLIA_ADMIN_KEY: ${{ secrets.ALGOLIA_ADMIN_KEY }}

@@ -3,7 +3,7 @@ defaultContentLanguage = "en"
 languageCode = "en"
 theme = "LoveIt"
 
-
+uglyurls = true
 enableRobotsTXT = true
 enableEmoji = true
 
@@ -77,7 +77,7 @@ enableEmoji = true
       auto = true
     [params.page.code]
       copy = true
-      maxShownLines = 10
+      maxShownLines = 20
     [params.page.comment]
       enable = true
       # Valine comment config (https://github.com/xCss/Valine)
