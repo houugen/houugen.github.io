@@ -1,0 +1,20 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>react-native - Tag -</title><link>http://example.org/tags/react-native.html</link><description>react-native - Tag -</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Thu, 31 May 2018 16:59:14 +0000</lastBuildDate><atom:link href="http://example.org/tags/react-native.html" rel="self" type="application/rss+xml"/><item><title>内嵌React的android应用流量加解密</title><link>http://example.org/posts/%E5%86%85%E5%B5%8Creact%E7%9A%84android%E5%BA%94%E7%94%A8%E6%B5%81%E9%87%8F%E5%8A%A0%E8%A7%A3%E5%AF%86.html</link><pubDate>Thu, 31 May 2018 16:59:14 +0000</pubDate><author>Author</author><guid>http://example.org/posts/%E5%86%85%E5%B5%8Creact%E7%9A%84android%E5%BA%94%E7%94%A8%E6%B5%81%E9%87%8F%E5%8A%A0%E8%A7%A3%E5%AF%86.html</guid><description><![CDATA[0x00 背景 最近在做测试时发现应用使用 facebook 的 react-native 进行混合开发，对于想了解 react-native 的同学，可以查阅github和官方文档，网上也有很多 android 内嵌 react-native 进行混合开发的环境搭建及教程供学习，例如：https://blog.csdn.net/u011148116/article/details/58178348。
+该应用核心业务接口数据加密，且加密逻辑在本地js中实现，而测试过程有代理明文抓包改参需求，而研究一二，并记录过程。
+0x01 通信加解密历史 终端应用渗透测试包括 客户端&lt;&ndash;通信&ndash;&gt;服务端，客户端测试可以通过各种逆向反编译、动态调试、hook框架分析逻辑及攻击面，而服务端安全则需要通过中间人的方式抓包改参（人工、漏扫、fuzz）来挖掘服务端漏洞。
+而现有的app基本都使用https传输，对数据敏感的应用会做二次加密或格式化序列化处理。针对https的原理和绕过可以参考android网络请求-证书认证，而对于二次加密，则需要逆向分析客户端代码了。
+常见的加解密逻辑都会在java层或native层，通过url、头关键字、请求关键字、加密算法、log等关键字在反编译代码中搜寻定位。
+绕过加密手段有:
+ hook插件+代理插件的方式 hook插件+server+代理插件的方式  其核心都是在代理中获取明文数据，而明文加密的操作放在插件中。
+hook插件&#43;代理插件的方式hook插件&#43;代理插件
+" hook插件+代理插件的方式 
+hook插件&#43;server&#43;代理插件的方式hook插件&#43;server&#43;代理插件
+" hook插件+server+代理插件的方式 
+0x02 react-native js解密 本次测试开始采用通用方式，在反编译代码中搜寻蛛丝马迹，然并卵，本以为请求逻辑做在了native中，简单搜索System.loadLibrary也未确定可疑so文件。
+故通过解压apk，全局搜索接口关键字：
+grep -rn &#34;xxx&#34; . 在 assets 文件下的js文件中发现关键字：
+可确定使用js+android混合开发，而网络请求与数据加密均由js实现。
+那我们思路就是js强制发明文，经过burp加密发送；或者经过server加密，burp发送加密数据。
+ok，思路清晰后，我们就要带着如下问题进行尝试：
+Question   js中post数据构成逻辑为何？如何强制明文？ 两种方式工作量对比，若采用burp加密，是复现js加密算法，还是加载js？若采用server加密，改如何构建c（burp）-s（server）？ server我使用擅长的python实现，那如何在python中运行js？     首先来看第一个问题：
+js文件index.android.bundle未做加密和强混淆，通过格式化即可看到代码原貌，通过关键字（箭头所指）确定发送请求和参数构造（图中文字）代码： 而参数经过一系列函数的运算加密生成： 发送明文也很简单，直接修改js代码 return r 即可，这里也打消在burp插件中复现js加密逻辑的想法，真的很复杂。
+Info  这里因为修改了apk的资源文件，重压缩打包后需要签名，否则安装报错。   接着看第二个问题：]]></description></item></channel></rss>
