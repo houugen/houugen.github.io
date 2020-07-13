@@ -36,6 +36,7 @@ jobs:
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           publish_dir: ./public
           publish_branch: master
+          cname: houugen.fun
 
       - name: Setup Algolia
         env:
