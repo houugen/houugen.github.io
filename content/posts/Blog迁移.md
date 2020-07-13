@@ -1,7 +1,7 @@
 ---
 title: "Blog From Hexo To Hugo"
 date: 2020-07-13T17:44:54+08:00
-tags: ["Hugo","GithubActions"]
+tags: ["Hugo","GithubActions","LoveIt"]
 categories: ["Others"]
 draft: false
 ---
