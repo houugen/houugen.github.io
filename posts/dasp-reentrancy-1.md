@@ -33,12 +33,11 @@
 
 [the-dao-the-hack-the-soft-fork-and-the-hard-fork](https://www.cryptocompare.com/coins/guides/the-dao-the-hack-the-soft-fork-and-the-hard-fork/)
 
-```
-+------------------------+  3.5M ETH lose   +-----------+  DoS vul   +-----------+
-| antipattern (withdrew) | ---------------> | soft fork | ---------> | hard fork |
-+------------------------+                  +-----------+            +-----------+
-```
-
+{{< mermaid >}}
+graph LR;
+    A[antipattern withdrew] -->|3.5M ETH lose| B(soft fork)
+    B --> |DoS vul| C(hard fork)
+{{< /mermaid >}}
 
 [security-alert-dos-vulnerability-in-the-soft-fork](https://blog.ethereum.org/2016/06/28/security-alert-dos-vulnerability-in-the-soft-fork/)
 

@@ -56,5 +56,7 @@ The History of the DAO WhitePaper:
 WhitePaper 白皮书 OpenSource:
 Github etherscan 概念理解 众筹合约，通过资金ETH换取DAO token，从而获得投票和发起议案的权利，按一定规则回馈给投资人投资项目的收益。 因此，The DAO特点：
 本质是个VC，通过以太坊筹集的资金（ETH）锁定在智能合约中，通过代码主导！ 出资ETH获取对应DAO代币，具有审查项目、投票表决和提出投资项目议案的权利 投资议案由全体代币持有人投票表决，一币一票，票数通过，投资项目可获得相应投资额。利用“众智”+出资额权重决定投资策略（取代传统行业投资经理）。 投资项目的收益按规则回馈股东。 The DAO is attacked the-dao-the-hack-the-soft-fork-and-the-hard-fork
-+------------------------+ 3.5M ETH lose +-----------+ DoS vul +-----------+ | antipattern (withdrew) | ---------------&amp;gt; | soft fork | ---------&amp;gt; | hard fork | +------------------------+ +-----------+ +-----------+ security-alert-dos-vulnerability-in-the-soft-fork
-0x02 Reentrancy solidity基础知识 合约调用</description></item></channel></rss>
+security-alert-dos-vulnerability-in-the-soft-fork
+0x02 Reentrancy solidity基础知识 合约调用
+message call bytes4 funcIdentifier = bytes4(keccak256(&amp;#34;FuncName(paramType)&amp;#34;)); this.call(funcIdentifier, paramValue); contract object Contract1 c = Contract1(AddressOfContract1); c.foo(); 限制
+例如send花费2300gas 递归调用栈最大1024层 转币</description></item></channel></rss>
