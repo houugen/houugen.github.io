@@ -28,7 +28,7 @@ categories: ["iOS"]
 还是从 Demo 到源码分析。
 
 {{< admonition tip >}}
-强烈建议先阅读 **方法查找和消息转发** 文章来理解 `Runtime` 动态消息发送机制。
+强烈建议先阅读 [方法查找和消息转发](https://houugen.fun/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html) 文章来理解 `Runtime` 动态消息发送机制。
 {{< /admonition >}}
 
 ## 玩坏的🌰
