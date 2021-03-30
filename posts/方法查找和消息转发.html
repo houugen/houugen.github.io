@@ -1,0 +1,450 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><meta http-equiv=x-ua-compatible content="IE=edge, chrome=1"><title>方法查找和消息转发 -</title><meta name=Description content="This is Houugen's Hugo Site"><meta property="og:title" content="方法查找和消息转发"><meta property="og:description" content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   Tip  源码分析环境：objc4-818.2   根据之前的文章我们知道OC方法的本质就是调用 obj_msgSend，那么我们具体分析下 ObjC 下方法的查找和转发机制。
+obj_msgSend 的实现在 obj-msg-rm64.s 中的汇编代码为：
+ENTRY _objc_msgSend UNWIND _objc_msgSend, NoFrame cmp p0, #0 // nil check and tagged pointer check #if SUPPORT_TAGGED_POINTERS b.le LNilOrTagged // (MSB tagged pointer looks negative) #else b.eq LReturnZero #endif ldr p13, [x0] // p13 = isa GetClassFromIsa_p16 p13, 1, x0 // p16 = class LGetIsaDone: // calls imp or objc_msgSend_uncached CacheLookup NORMAL, _objc_msgSend, __objc_msgSend_uncached #if SUPPORT_TAGGED_POINTERS LNilOrTagged: b."><meta property="og:type" content="article"><meta property="og:url" content="http://houugen.fun/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-03-15T21:00:00+00:00"><meta property="article:modified_time" content="2021-03-15T21:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="方法查找和消息转发"><meta name=twitter:description content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   Tip  源码分析环境：objc4-818.2   根据之前的文章我们知道OC方法的本质就是调用 obj_msgSend，那么我们具体分析下 ObjC 下方法的查找和转发机制。
+obj_msgSend 的实现在 obj-msg-rm64.s 中的汇编代码为：
+ENTRY _objc_msgSend UNWIND _objc_msgSend, NoFrame cmp p0, #0 // nil check and tagged pointer check #if SUPPORT_TAGGED_POINTERS b.le LNilOrTagged // (MSB tagged pointer looks negative) #else b.eq LReturnZero #endif ldr p13, [x0] // p13 = isa GetClassFromIsa_p16 p13, 1, x0 // p16 = class LGetIsaDone: // calls imp or objc_msgSend_uncached CacheLookup NORMAL, _objc_msgSend, __objc_msgSend_uncached #if SUPPORT_TAGGED_POINTERS LNilOrTagged: b."><meta name=application-name content><meta name=apple-mobile-web-app-title content><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=http://houugen.fun/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html><link rel=prev href=http://houugen.fun/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html><link rel=next href=http://houugen.fun/posts/method-swizzling.html><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"方法查找和消息转发","inLanguage":"en","mainEntityOfPage":{"@type":"WebPage","@id":"http:\/\/houugen.fun\/posts\/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html"},"genre":"posts","keywords":"iOS, AOP","wordcount":1917,"url":"http:\/\/houugen.fun\/posts\/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html","datePublished":"2021-03-15T21:00:00+00:00","dateModified":"2021-03-15T21:00:00+00:00","publisher":{"@type":"Organization","name":"Houugen"},"author":{"@type":"Person","name":"Houugen"},"description":""}</script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'dark'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'dark'==='dark')&&document.body.setAttribute('theme','dark')</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts.html>Posts </a><a class=menu-item href=/tags.html>Tags </a><a class=menu-item href=/categories.html>Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop><input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin"></i></span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw"></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin"></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts.html title>Posts</a><a class=menu-item href=/tags.html title>Tags</a><a class=menu-item href=/categories.html title>Categories</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw"></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animated flipInX">方法查找和消息转发</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=/ title=Author rel=" author" class=author><i class="fas fa-user-circle fa-fw"></i>Houugen</a></span>&nbsp;<span class=post-category>included in <a href=/categories/ios.html><i class="far fa-folder fa-fw"></i>iOS</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-03-15>2021-03-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;1917 words&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;9 minutes&nbsp;<span id=/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html class=leancloud_visitors data-flag-title=方法查找和消息转发>
+<i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+</span>&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#1-获取isa>1. 获取isa</a></li><li><a href=#2-缓存查找>2. 缓存查找</a></li><li><a href=#3-方法查找流程>3. 方法查找流程</a><ul><li><a href=#31-查找本类>3.1 查找本类</a></li><li><a href=#32-查找父类>3.2 查找父类</a></li><li><a href=#33-动态方法解析>3.3 动态方法解析</a></li><li><a href=#34-重新执行查找流程>3.4 重新执行查找流程</a></li><li><a href=#35-消息转发>3.5 消息转发</a></li></ul></li><li><a href=#4-消息转发分析>4. 消息转发分析</a><ul><li><a href=#41-forwardingtargetforselector>4.1 forwardingTargetForSelector</a></li><li><a href=#42-methodsignatureforselector>4.2 methodSignatureForSelector</a></li></ul></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><blockquote><p>iOS AOP文章系列</p><p>前导知识：</p><ul><li>Mach-O文件结构分析</li><li>静态链接&动态链接</li><li>OC方法&OC类&OC对象</li><li>方法查找和消息转发</li></ul><p>AOP框架：</p><ul><li>Method Swizzling</li><li>Fishhook</li><li>Apsects</li><li>NSProxy AOP</li></ul></blockquote><div class="details admonition tip open"><div class="details-summary admonition-title"><i class="icon fas fa-lightbulb fa-fw"></i>Tip<i class="details-icon fas fa-angle-right fa-fw"></i></div><div class=details-content><div class=admonition-content><strong>源码分析环境：objc4-818.2</strong></div></div></div><p>根据之前的文章我们知道OC方法的本质就是调用 <code>obj_msgSend</code>，那么我们具体分析下 ObjC 下方法的查找和转发机制。</p><p><code>obj_msgSend</code> 的实现在 <code>obj-msg-rm64.s</code> 中的汇编代码为：</p><pre><code>ENTRY _objc_msgSend
+    UNWIND _objc_msgSend, NoFrame
+
+    cmp p0, #0          // nil check and tagged pointer check
+#if SUPPORT_TAGGED_POINTERS
+    b.le    LNilOrTagged        //  (MSB tagged pointer looks negative)
+#else
+    b.eq    LReturnZero
+#endif
+    ldr p13, [x0]       // p13 = isa
+    GetClassFromIsa_p16 p13, 1, x0  // p16 = class
+LGetIsaDone:
+    // calls imp or objc_msgSend_uncached
+    CacheLookup NORMAL, _objc_msgSend, __objc_msgSend_uncached
+
+#if SUPPORT_TAGGED_POINTERS
+LNilOrTagged:
+    b.eq    LReturnZero     // nil check
+    GetTaggedClass
+    b   LGetIsaDone
+// SUPPORT_TAGGED_POINTERS
+#endif
+
+LReturnZero:
+    // x0 is already zero
+    mov x1, #0
+    movi    d0, #0
+    movi    d1, #0
+    movi    d2, #0
+    movi    d3, #0
+    ret
+
+    END_ENTRY _objc_msgSend
+</code></pre><p>根据汇编和注释，理出其核心伪代码为：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=n>id</span> <span class=nf>objc_msgSend</span><span class=p>(</span><span class=n>id</span> <span class=n>receiver</span><span class=p>,</span> <span class=n>SEL</span> <span class=n>selector</span><span class=p>,</span> <span class=p>...)</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>receiver</span> <span class=o>==</span> <span class=n>nil</span><span class=p>)</span> <span class=k>return</span> <span class=n>nil</span><span class=p>;</span>
+    <span class=n>Class</span> <span class=n>cls</span> <span class=o>=</span> <span class=n>receiver</span><span class=o>-&gt;</span><span class=n>getIsa</span><span class=p>();</span> <span class=c1>// 1
+</span><span class=c1></span>    <span class=n>imp</span> <span class=o>=</span> <span class=n>CacheLookup</span><span class=p>(</span><span class=n>receiver</span><span class=p>,</span> <span class=n>selector</span><span class=p>);</span> <span class=c1>// 2 
+</span><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>imp</span><span class=p>)</span> <span class=k>return</span> <span class=n>imp</span><span class=p>;</span>
+    <span class=c1>// __objc_msgSend_uncached -&gt; MethodTableLookup -&gt; _lookUpImpOrForward
+</span><span class=c1></span>    <span class=n>imp</span> <span class=o>=</span> <span class=n>lookUpImpOrForward</span><span class=p>(</span><span class=n>receiver</span><span class=p>,</span> <span class=n>selector</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span> <span class=c1>// 3
+</span><span class=c1></span>    <span class=k>return</span> <span class=n>imp</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=1-获取isa>1. 获取isa</h2><pre><code>ldr p13, [x0]  // p13 = isa
+GetClassFromIsa_p16 p13, 1, x0  // p16 = class
+
+==&gt; Class cls = receiver-&gt;getIsa();
+</code></pre><p><code>GetClassFromIsa_p16</code> 汇编代码：</p><pre><code>.macro GetClassFromIsa_p16 src, needs_auth, auth_address /* note: auth_address is not required if !needs_auth */
+
+#if SUPPORT_INDEXED_ISA
+    // Indexed isa
+    mov p16, \src           // optimistically set dst = src
+    tbz p16, #ISA_INDEX_IS_NPI_BIT, 1f  // done if not non-pointer isa
+    // isa in p16 is indexed
+    adrp    x10, _objc_indexed_classes@PAGE
+    add x10, x10, _objc_indexed_classes@PAGEOFF
+    ubfx    p16, p16, #ISA_INDEX_SHIFT, #ISA_INDEX_BITS  // extract index
+    ldr p16, [x10, p16, UXTP #PTRSHIFT] // load class from array
+1:
+
+#elif __LP64__
+.if \needs_auth == 0 // _cache_getImp takes an authed class already
+    mov p16, \src
+.else
+    // 64-bit packed isa
+    ExtractISA p16, \src, \auth_address
+.endif
+#else
+    // 32-bit raw isa
+    mov p16, \src
+
+#endif
+
+.endmacro
+</code></pre><p>C语言实现版本为 <code>getIsa</code></p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=kr>inline</span> <span class=n>Class</span>
+<span class=n>objc_object</span><span class=o>::</span><span class=n>getIsa</span><span class=p>()</span> 
+<span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>fastpath</span><span class=p>(</span><span class=o>!</span><span class=n>isTaggedPointer</span><span class=p>()))</span> <span class=k>return</span> <span class=n>ISA</span><span class=p>();</span>
+
+    <span class=k>extern</span> <span class=n>objc_class</span> <span class=n>OBJC_CLASS_</span><span class=err>$</span><span class=n>___NSUnrecognizedTaggedPointer</span><span class=p>;</span>
+    <span class=n>uintptr_t</span> <span class=n>slot</span><span class=p>,</span> <span class=n>ptr</span> <span class=o>=</span> <span class=p>(</span><span class=n>uintptr_t</span><span class=p>)</span><span class=n>this</span><span class=p>;</span>
+    <span class=n>Class</span> <span class=n>cls</span><span class=p>;</span>
+
+    <span class=n>slot</span> <span class=o>=</span> <span class=p>(</span><span class=n>ptr</span> <span class=o>&gt;&gt;</span> <span class=n>_OBJC_TAG_SLOT_SHIFT</span><span class=p>)</span> <span class=o>&amp;</span> <span class=n>_OBJC_TAG_SLOT_MASK</span><span class=p>;</span>
+    <span class=n>cls</span> <span class=o>=</span> <span class=n>objc_tag_classes</span><span class=p>[</span><span class=n>slot</span><span class=p>];</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>cls</span> <span class=o>==</span> <span class=p>(</span><span class=n>Class</span><span class=p>)</span><span class=o>&amp;</span><span class=n>OBJC_CLASS_</span><span class=err>$</span><span class=n>___NSUnrecognizedTaggedPointer</span><span class=p>))</span> <span class=p>{</span>
+        <span class=n>slot</span> <span class=o>=</span> <span class=p>(</span><span class=n>ptr</span> <span class=o>&gt;&gt;</span> <span class=n>_OBJC_TAG_EXT_SLOT_SHIFT</span><span class=p>)</span> <span class=o>&amp;</span> <span class=n>_OBJC_TAG_EXT_SLOT_MASK</span><span class=p>;</span>
+        <span class=n>cls</span> <span class=o>=</span> <span class=n>objc_tag_ext_classes</span><span class=p>[</span><span class=n>slot</span><span class=p>];</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=n>cls</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=2-缓存查找>2. 缓存查找</h2><pre><code>CacheLookup NORMAL
+
+==&gt; imp = CacheLookup(receiver, selector);
+</code></pre><p><code>CacheLookup</code> 包含三种模式 <code>NORMAL</code> / <code>LOOKUP</code> / <code>GETIMP</code></p><p>其具体汇编逻辑就是在 <code>objc_class</code> 类结构体中获取 <code>cache_t</code> 的 <code>buckets</code>，循环比较要查找的方法名是否在缓存列表 <code>buckets</code> 中，找到返回 <code>imp</code>，没有找到则调用 <code>__objc_msgSend_uncached</code>（具体数据结构在<strong>OC方法&OC类&OC对象</strong>中查看）</p><pre><code>STATIC_ENTRY __objc_msgSend_uncached
+UNWIND __objc_msgSend_uncached, FrameWithNoSaves
+
+// THIS IS NOT A CALLABLE C FUNCTION
+// Out-of-band p15 is the class to search
+
+MethodTableLookup
+TailCallFunctionPointer x17
+
+END_ENTRY __objc_msgSend_uncached
+</code></pre><p><code>MethodTableLookup</code>：</p><pre><code>.macro MethodTableLookup
+    
+    SAVE_REGS MSGSEND
+
+    // lookUpImpOrForward(obj, sel, cls, LOOKUP_INITIALIZE | LOOKUP_RESOLVER)
+    // receiver and selector already in x0 and x1
+    mov x2, x16
+    mov x3, #3
+    bl  _lookUpImpOrForward
+
+    // IMP in x0
+    mov x17, x0
+
+    RESTORE_REGS MSGSEND
+
+.endmacro
+</code></pre><h2 id=3-方法查找流程>3. 方法查找流程</h2><p>而 <code>lookUpImpOrForward</code> 使用C函数实现：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=n>NEVER_INLINE</span>
+<span class=n>IMP</span> <span class=nf>lookUpImpOrForward</span><span class=p>(</span><span class=n>id</span> <span class=n>inst</span><span class=p>,</span> <span class=n>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=n>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=kt>int</span> <span class=n>behavior</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=k>const</span> <span class=n>IMP</span> <span class=n>forward_imp</span> <span class=o>=</span> <span class=p>(</span><span class=n>IMP</span><span class=p>)</span><span class=n>_objc_msgForward_impcache</span><span class=p>;</span>
+    <span class=n>IMP</span> <span class=n>imp</span> <span class=o>=</span> <span class=n>nil</span><span class=p>;</span>
+    <span class=n>Class</span> <span class=n>curClass</span><span class=p>;</span>
+
+    <span class=n>runtimeLock</span><span class=p>.</span><span class=n>assertUnlocked</span><span class=p>();</span>
+
+    <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=o>!</span><span class=n>cls</span><span class=o>-&gt;</span><span class=n>isInitialized</span><span class=p>()))</span> <span class=p>{</span>
+        <span class=c1>// The first message sent to a class is often +new or +alloc, or +self
+</span><span class=c1></span>        <span class=c1>// which goes through objc_opt_* or various optimized entry points.
+</span><span class=c1></span>        <span class=c1>//
+</span><span class=c1></span>        <span class=c1>// However, the class isn&#39;t realized/initialized yet at this point,
+</span><span class=c1></span>        <span class=c1>// and the optimized entry points fall down through objc_msgSend,
+</span><span class=c1></span>        <span class=c1>// which ends up here.
+</span><span class=c1></span>        <span class=c1>//
+</span><span class=c1></span>        <span class=c1>// We really want to avoid caching these, as it can cause IMP caches
+</span><span class=c1></span>        <span class=c1>// to be made with a single entry forever.
+</span><span class=c1></span>        <span class=c1>//
+</span><span class=c1></span>        <span class=c1>// Note that this check is racy as several threads might try to
+</span><span class=c1></span>        <span class=c1>// message a given class for the first time at the same time,
+</span><span class=c1></span>        <span class=c1>// in which case we might cache anyway.
+</span><span class=c1></span>        <span class=n>behavior</span> <span class=o>|=</span> <span class=n>LOOKUP_NOCACHE</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=c1>// runtimeLock is held during isRealized and isInitialized checking
+</span><span class=c1></span>    <span class=c1>// to prevent races against concurrent realization.
+</span><span class=c1></span>
+    <span class=c1>// runtimeLock is held during method search to make
+</span><span class=c1></span>    <span class=c1>// method-lookup + cache-fill atomic with respect to method addition.
+</span><span class=c1></span>    <span class=c1>// Otherwise, a category could be added but ignored indefinitely because
+</span><span class=c1></span>    <span class=c1>// the cache was re-filled with the old value after the cache flush on
+</span><span class=c1></span>    <span class=c1>// behalf of the category.
+</span><span class=c1></span>
+    <span class=n>runtimeLock</span><span class=p>.</span><span class=n>lock</span><span class=p>();</span>
+
+    <span class=c1>// We don&#39;t want people to be able to craft a binary blob that looks like
+</span><span class=c1></span>    <span class=c1>// a class but really isn&#39;t one and do a CFI attack.
+</span><span class=c1></span>    <span class=c1>//
+</span><span class=c1></span>    <span class=c1>// To make these harder we want to make sure this is a class that was
+</span><span class=c1></span>    <span class=c1>// either built into the binary or legitimately registered through
+</span><span class=c1></span>    <span class=c1>// objc_duplicateClass, objc_initializeClassPair or objc_allocateClassPair.
+</span><span class=c1></span>    <span class=n>checkIsKnownClass</span><span class=p>(</span><span class=n>cls</span><span class=p>);</span>
+
+    <span class=n>cls</span> <span class=o>=</span> <span class=n>realizeAndInitializeIfNeeded_locked</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span> <span class=o>&amp;</span> <span class=n>LOOKUP_INITIALIZE</span><span class=p>);</span>
+    <span class=c1>// runtimeLock may have been dropped but is now locked again
+</span><span class=c1></span>    <span class=n>runtimeLock</span><span class=p>.</span><span class=n>assertLocked</span><span class=p>();</span>
+    <span class=n>curClass</span> <span class=o>=</span> <span class=n>cls</span><span class=p>;</span>
+
+    <span class=c1>// The code used to lookup the class&#39;s cache again right after
+</span><span class=c1></span>    <span class=c1>// we take the lock but for the vast majority of the cases
+</span><span class=c1></span>    <span class=c1>// evidence shows this is a miss most of the time, hence a time loss.
+</span><span class=c1></span>    <span class=c1>//
+</span><span class=c1></span>    <span class=c1>// The only codepath calling into this without having performed some
+</span><span class=c1></span>    <span class=c1>// kind of cache lookup is class_getInstanceMethod().
+</span><span class=c1></span>
+    <span class=k>for</span> <span class=p>(</span><span class=kt>unsigned</span> <span class=n>attempts</span> <span class=o>=</span> <span class=n>unreasonableClassCount</span><span class=p>();;)</span> <span class=p>{</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>curClass</span><span class=o>-&gt;</span><span class=n>cache</span><span class=p>.</span><span class=n>isConstantOptimizedCache</span><span class=p>(</span><span class=cm>/* strict */</span><span class=nb>true</span><span class=p>))</span> <span class=p>{</span>
+<span class=cp>#if CONFIG_USE_PREOPT_CACHES
+</span><span class=cp></span>            <span class=n>imp</span> <span class=o>=</span> <span class=n>cache_getImp</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>imp</span><span class=p>)</span> <span class=k>goto</span> <span class=n>done_unlock</span><span class=p>;</span>
+            <span class=n>curClass</span> <span class=o>=</span> <span class=n>curClass</span><span class=o>-&gt;</span><span class=n>cache</span><span class=p>.</span><span class=n>preoptFallbackClass</span><span class=p>();</span>
+<span class=cp>#endif
+</span><span class=cp></span>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=c1>// curClass method list.
+</span><span class=c1></span>            <span class=n>Method</span> <span class=n>meth</span> <span class=o>=</span> <span class=n>getMethodNoSuper_nolock</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+            <span class=k>if</span> <span class=p>(</span><span class=n>meth</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>imp</span> <span class=o>=</span> <span class=n>meth</span><span class=o>-&gt;</span><span class=n>imp</span><span class=p>(</span><span class=nb>false</span><span class=p>);</span>
+                <span class=k>goto</span> <span class=n>done</span><span class=p>;</span>
+            <span class=p>}</span>
+
+            <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>((</span><span class=n>curClass</span> <span class=o>=</span> <span class=n>curClass</span><span class=o>-&gt;</span><span class=n>getSuperclass</span><span class=p>())</span> <span class=o>==</span> <span class=n>nil</span><span class=p>))</span> <span class=p>{</span>
+                <span class=c1>// No implementation found, and method resolver didn&#39;t help.
+</span><span class=c1></span>                <span class=c1>// Use forwarding.
+</span><span class=c1></span>                <span class=n>imp</span> <span class=o>=</span> <span class=n>forward_imp</span><span class=p>;</span>
+                <span class=k>break</span><span class=p>;</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+
+        <span class=c1>// Halt if there is a cycle in the superclass chain.
+</span><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=o>--</span><span class=n>attempts</span> <span class=o>==</span> <span class=mi>0</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>_objc_fatal</span><span class=p>(</span><span class=s>&#34;Memory corruption in class list.&#34;</span><span class=p>);</span>
+        <span class=p>}</span>
+
+        <span class=c1>// Superclass cache.
+</span><span class=c1></span>        <span class=n>imp</span> <span class=o>=</span> <span class=n>cache_getImp</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>imp</span> <span class=o>==</span> <span class=n>forward_imp</span><span class=p>))</span> <span class=p>{</span>
+            <span class=c1>// Found a forward:: entry in a superclass.
+</span><span class=c1></span>            <span class=c1>// Stop searching, but don&#39;t cache yet; call method
+</span><span class=c1></span>            <span class=c1>// resolver for this class first.
+</span><span class=c1></span>            <span class=k>break</span><span class=p>;</span>
+        <span class=p>}</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>fastpath</span><span class=p>(</span><span class=n>imp</span><span class=p>))</span> <span class=p>{</span>
+            <span class=c1>// Found the method in a superclass. Cache it in this class.
+</span><span class=c1></span>            <span class=k>goto</span> <span class=n>done</span><span class=p>;</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=c1>// No implementation found. Try method resolver once.
+</span><span class=c1></span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>behavior</span> <span class=o>&amp;</span> <span class=n>LOOKUP_RESOLVER</span><span class=p>))</span> <span class=p>{</span>
+        <span class=n>behavior</span> <span class=o>^=</span> <span class=n>LOOKUP_RESOLVER</span><span class=p>;</span>
+        <span class=k>return</span> <span class=n>resolveMethod_locked</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span><span class=p>);</span>
+    <span class=p>}</span>
+
+ <span class=nl>done</span><span class=p>:</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>fastpath</span><span class=p>((</span><span class=n>behavior</span> <span class=o>&amp;</span> <span class=n>LOOKUP_NOCACHE</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>))</span> <span class=p>{</span>
+<span class=cp>#if CONFIG_USE_PREOPT_CACHES
+</span><span class=cp></span>        <span class=k>while</span> <span class=p>(</span><span class=n>cls</span><span class=o>-&gt;</span><span class=n>cache</span><span class=p>.</span><span class=n>isConstantOptimizedCache</span><span class=p>(</span><span class=cm>/* strict */</span><span class=nb>true</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>cls</span> <span class=o>=</span> <span class=n>cls</span><span class=o>-&gt;</span><span class=n>cache</span><span class=p>.</span><span class=n>preoptFallbackClass</span><span class=p>();</span>
+        <span class=p>}</span>
+<span class=cp>#endif
+</span><span class=cp></span>        <span class=n>log_and_fill_cache</span><span class=p>(</span><span class=n>cls</span><span class=p>,</span> <span class=n>imp</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>inst</span><span class=p>,</span> <span class=n>curClass</span><span class=p>);</span>
+    <span class=p>}</span>
+ <span class=nl>done_unlock</span><span class=p>:</span>
+    <span class=n>runtimeLock</span><span class=p>.</span><span class=n>unlock</span><span class=p>();</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>((</span><span class=n>behavior</span> <span class=o>&amp;</span> <span class=n>LOOKUP_NIL</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=n>imp</span> <span class=o>==</span> <span class=n>forward_imp</span><span class=p>))</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>nil</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=n>imp</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>这是 <code>objc-runtime-new.mm</code> 中源码，其实可以结合 <code>objc-runtime-old.mm</code> 能更清晰的理出其逻辑：</p><ul><li><p>初始化</p></li><li><p>本类缓存查找</p></li><li><ul><li>找到返回 <code>IMP</code></li></ul></li><li><p>本类方法列表查找</p></li><li><ul><li>找到返回 IMP</li></ul></li><li><p>循环父类链在父类缓存和方法列表查找</p></li><li><ul><li>找到记录进缓存</li><li>获取 <code>IMP</code>返回</li></ul></li><li><p>动态方法解析</p></li><li><ul><li>实例方法解析</li><li>类方法解析</li></ul></li><li><p>重新进行一边方法查找流程</p></li><li><p>消息转发</p></li></ul><h3 id=31-查找本类>3.1 查找本类</h3><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=c1>// 查找本类缓存
+</span><span class=c1></span><span class=k>if</span> <span class=p>(</span><span class=n>curClass</span><span class=o>-&gt;</span><span class=n>cache</span><span class=p>.</span><span class=n>isConstantOptimizedCache</span><span class=p>(</span><span class=cm>/* strict */</span><span class=nb>true</span><span class=p>))</span> <span class=p>{</span>
+    <span class=n>imp</span> <span class=o>=</span> <span class=n>cache_getImp</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>imp</span><span class=p>)</span> <span class=k>goto</span> <span class=n>done_unlock</span><span class=p>;</span>
+    <span class=p>...</span>
+    <span class=cp>#endif
+</span><span class=cp></span><span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+<span class=c1>// 查找本类方法列表
+</span><span class=c1></span>    <span class=c1>// curClass method list.
+</span><span class=c1></span>    <span class=n>Method</span> <span class=n>meth</span> <span class=o>=</span> <span class=n>getMethodNoSuper_nolock</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>meth</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>imp</span> <span class=o>=</span> <span class=n>meth</span><span class=o>-&gt;</span><span class=n>imp</span><span class=p>(</span><span class=nb>false</span><span class=p>);</span>
+        <span class=k>goto</span> <span class=n>done</span><span class=p>;</span>
+    <span class=p>}</span>
+</code></pre></div><h3 id=32-查找父类>3.2 查找父类</h3><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=c1>// Superclass cache.
+</span><span class=c1></span><span class=n>imp</span> <span class=o>=</span> <span class=n>cache_getImp</span><span class=p>(</span><span class=n>curClass</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+<span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>imp</span> <span class=o>==</span> <span class=n>forward_imp</span><span class=p>))</span> <span class=p>{</span>
+    <span class=c1>// Found a forward:: entry in a superclass.
+</span><span class=c1></span>    <span class=c1>// Stop searching, but don&#39;t cache yet; call method
+</span><span class=c1></span>    <span class=c1>// resolver for this class first.
+</span><span class=c1></span>    <span class=k>break</span><span class=p>;</span>
+<span class=p>}</span>
+<span class=k>if</span> <span class=p>(</span><span class=n>fastpath</span><span class=p>(</span><span class=n>imp</span><span class=p>))</span> <span class=p>{</span>
+    <span class=c1>// Found the method in a superclass. Cache it in this class.
+</span><span class=c1></span>    <span class=k>goto</span> <span class=n>done</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>其中 <code>slowpath</code> 和 <code>fastpath</code> 是两个宏定义，其主要作用是告诉编译 <code>if</code> 中是大概率还是小概率事件从而优化代码</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=c1>// x 大概率是1
+</span><span class=c1></span><span class=cp>#define fastpath(x) (__builtin_expect(bool(x), 1))
+</span><span class=cp></span><span class=c1>// x 大概率是0
+</span><span class=c1></span><span class=cp>#define slowpath(x) (__builtin_expect(bool(x), 0))
+</span></code></pre></div><p>所以 <code>slowpath(imp == forward_imp)</code> 就是大概率 <code>imp</code> 不等于 <code>forward_imp</code></p><p><code>fastpath(imp)</code> 是 <code>imp</code> 大概率存在</p><h3 id=33-动态方法解析>3.3 动态方法解析</h3><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=c1>// No implementation found. Try method resolver once.
+</span><span class=c1></span><span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>behavior</span> <span class=o>&amp;</span> <span class=n>LOOKUP_RESOLVER</span><span class=p>))</span> <span class=p>{</span>
+    <span class=n>behavior</span> <span class=o>^=</span> <span class=n>LOOKUP_RESOLVER</span><span class=p>;</span>
+    <span class=k>return</span> <span class=nf>resolveMethod_locked</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span><span class=p>);</span>
+<span class=p>}</span>
+<span class=k>static</span> <span class=n>NEVER_INLINE</span> <span class=kt>IMP</span>
+<span class=n>resolveMethod_locked</span><span class=p>(</span><span class=kt>id</span> <span class=n>inst</span><span class=p>,</span> <span class=kt>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=kt>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=kt>int</span> <span class=n>behavior</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=p>...</span>
+    <span class=k>if</span> <span class=p>(</span><span class=o>!</span> <span class=n>cls</span><span class=o>-&gt;</span><span class=n>isMetaClass</span><span class=p>())</span> <span class=p>{</span>
+        <span class=c1>// try [cls resolveInstanceMethod:sel]
+</span><span class=c1></span>        <span class=n>resolveInstanceMethod</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span>
+    <span class=p>}</span> 
+    <span class=k>else</span> <span class=p>{</span>
+        <span class=c1>// try [nonMetaClass resolveClassMethod:sel]
+</span><span class=c1></span>        <span class=c1>// and [cls resolveInstanceMethod:sel]
+</span><span class=c1></span>        <span class=n>resolveClassMethod</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span>
+        <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>lookUpImpOrNilTryCache</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>))</span> <span class=p>{</span>
+            <span class=n>resolveInstanceMethod</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+    <span class=p>...</span>
+<span class=p>}</span>
+</code></pre></div><p><code>resolveMethod_locked</code> 的逻辑是如果本类是元类，调用 <code>resolveInstanceMethod</code>；如果不是说明方法是实例方法，调用 <code>resolveClassMethod</code>。</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=k>static</span> <span class=kt>void</span> <span class=nf>resolveInstanceMethod</span><span class=p>(</span><span class=n>id</span> <span class=n>inst</span><span class=p>,</span> <span class=n>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=n>Class</span> <span class=n>cls</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=p>...</span>
+    <span class=n>SEL</span> <span class=n>resolve_sel</span> <span class=o>=</span> <span class=err>@</span><span class=n>selector</span><span class=p>(</span><span class=nl>resolveInstanceMethod</span><span class=p>:);</span>
+    <span class=n>BOOL</span> <span class=p>(</span><span class=o>*</span><span class=n>msg</span><span class=p>)(</span><span class=n>Class</span><span class=p>,</span> <span class=n>SEL</span><span class=p>,</span> <span class=n>SEL</span><span class=p>)</span> <span class=o>=</span> <span class=p>(</span><span class=n>typeof</span><span class=p>(</span><span class=n>msg</span><span class=p>))</span><span class=n>objc_msgSend</span><span class=p>;</span>
+    <span class=kt>bool</span> <span class=n>resolved</span> <span class=o>=</span> <span class=n>msg</span><span class=p>(</span><span class=n>cls</span><span class=p>,</span> <span class=n>resolve_sel</span><span class=p>,</span> <span class=n>sel</span><span class=p>);</span>
+
+    <span class=c1>// Cache the result (good or bad) so the resolver doesn&#39;t fire next time.
+</span><span class=c1></span>    <span class=c1>// +resolveInstanceMethod adds to self a.k.a. cls
+</span><span class=c1></span>    <span class=n>IMP</span> <span class=n>imp</span> <span class=o>=</span> <span class=n>lookUpImpOrNilTryCache</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span>
+    <span class=p>...</span>
+<span class=p>}</span>
+</code></pre></div><p>发送调用 <code>resolveInstanceMethod:</code> 解析器方法（在 <code>NSObjcet</code> 中已实现），该解析器方法动态为实例方法的 <code>SEL</code> 提供 <code>IMP</code>，如果找到方法并添加到 <code>receiver</code> 中返回 <code>true</code>。<strong>解析成功需要重新进行方法查找以保障返回 IMP。</strong></p><h3 id=34-重新执行查找流程>3.4 重新执行查找流程</h3><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=k>static</span> <span class=n>NEVER_INLINE</span> <span class=kt>IMP</span>
+<span class=nf>resolveMethod_locked</span><span class=p>(</span><span class=kt>id</span> <span class=n>inst</span><span class=p>,</span> <span class=kt>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=kt>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=kt>int</span> <span class=n>behavior</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=p>...</span>
+    <span class=c1>// chances are that calling the resolver have populated the cache
+</span><span class=c1></span>    <span class=c1>// so attempt using it
+</span><span class=c1></span>    <span class=k>return</span> <span class=n>lookUpImpOrForwardTryCache</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=kt>IMP</span> <span class=nf>lookUpImpOrForwardTryCache</span><span class=p>(</span><span class=kt>id</span> <span class=n>inst</span><span class=p>,</span> <span class=kt>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=kt>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=kt>int</span> <span class=n>behavior</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=k>return</span> <span class=n>_lookUpImpTryCache</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=k>static</span> <span class=kt>IMP</span> <span class=nf>_lookUpImpTryCache</span><span class=p>(</span><span class=kt>id</span> <span class=n>inst</span><span class=p>,</span> <span class=kt>SEL</span> <span class=n>sel</span><span class=p>,</span> <span class=kt>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=kt>int</span> <span class=n>behavior</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=p>...</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>slowpath</span><span class=p>(</span><span class=n>imp</span> <span class=o>==</span> <span class=nb>NULL</span><span class=p>))</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>lookUpImpOrForward</span><span class=p>(</span><span class=n>inst</span><span class=p>,</span> <span class=n>sel</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>behavior</span><span class=p>);</span>
+    <span class=p>}</span>
+    <span class=p>...</span>
+<span class=p>}</span>
+</code></pre></div><p>最终会再执行 <code>lookUpImpOrForward</code> 重走查找流程。</p><h3 id=35-消息转发>3.5 消息转发</h3><p>如果以上流程都没有找到方法 <code>IMP</code>，则进入消息转发流程，这个流程又进入到汇编代码中</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=k>const</span> <span class=kt>IMP</span> <span class=n>forward_imp</span> <span class=o>=</span> <span class=p>(</span><span class=kt>IMP</span><span class=p>)</span><span class=n>_objc_msgForward_impcache</span><span class=p>;</span>
+<span class=c1>// No implementation found, and method resolver didn&#39;t help.
+</span><span class=c1>// Use forwarding.
+</span><span class=c1></span><span class=n>imp</span> <span class=o>=</span> <span class=n>forward_imp</span><span class=p>;</span>
+</code></pre></div><h2 id=4-消息转发分析>4. 消息转发分析</h2><pre><code>/********************************************************************
+*
+* id _objc_msgForward(id self, SEL _cmd,...);
+*
+* _objc_msgForward is the externally-callable
+*   function returned by things like method_getImplementation().
+* _objc_msgForward_impcache is the function pointer actually stored in
+*   method caches.
+*
+********************************************************************/
+
+    STATIC_ENTRY __objc_msgForward_impcache
+
+    // No stret specialization.
+    b   __objc_msgForward
+
+    END_ENTRY __objc_msgForward_impcache
+
+    
+    ENTRY __objc_msgForward
+
+    adrp    x17, __objc_forward_handler@PAGE
+    ldr p17, [x17, __objc_forward_handler@PAGEOFF]
+    TailCallFunctionPointer x17
+    
+    END_ENTRY __objc_msgForward
+void *_objc_forward_handler = (void*)objc_defaultForwardHandler;
+</code></pre><p>这里其实跟不下去了，查阅资料发现这里有个小技巧，可以通过 <code>instrumentObjcMessageSends</code> 打开 <code>log</code>，并且会保存在 <code>/tmp/msgSends-%d</code> 路径文件中，我们在 <code>Demo</code> 中添加代码：</p><figure><img src=./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1616671729249-af8ecc77-e653-4584-ad7d-7bf0332156f7.png width=80%></figure><p>查看日志文件：</p><pre><code>Student Student resolveInstanceMethod:
+Student Student resolveInstanceMethod:
+Student NSObject forwardingTargetForSelector:
+Student NSObject forwardingTargetForSelector:
+Student Student methodSignatureForSelector:
+Student Student methodSignatureForSelector:
+</code></pre><h3 id=41-forwardingtargetforselector>4.1 forwardingTargetForSelector</h3><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=p>+</span> <span class=p>(</span><span class=kt>id</span><span class=p>)</span><span class=nf>forwardingTargetForSelector:</span><span class=p>(</span><span class=kt>SEL</span><span class=p>)</span><span class=nv>sel</span> <span class=p>{</span>
+    <span class=k>return</span> <span class=nb>nil</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>id</span><span class=p>)</span><span class=nf>forwardingTargetForSelector:</span><span class=p>(</span><span class=kt>SEL</span><span class=p>)</span><span class=nv>sel</span> <span class=p>{</span>
+    <span class=k>return</span> <span class=nb>nil</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>我们看下<a href="https://developer.apple.com/documentation/objectivec/nsobject/1418855-forwardingtargetforselector?language=objc" target=_blank rel="noopener noreffer">官方接口描述</a>：</p><blockquote><p>If an object implements (or inherits) this method, and returns a non-<code>nil</code> (and non-<code>self</code>) result, that returned object is used as the new receiver object and the message dispatch resumes to that new object. (Obviously if you return <code>self</code> from this method, the code would just fall into an infinite loop.)</p><p>If you implement this method in a non-root class, if your class has nothing to return for the given selector then you should return the result of invoking super’s implementation.</p><p>This method gives an object a chance to redirect an unknown message sent to it before the much more expensive <a href="https://developer.apple.com/documentation/objectivec/nsobject/1571955-forwardinvocation?language=objc" target=_blank rel="noopener noreffer"><code>forwardInvocation:</code></a> machinery takes over. This is useful when you simply want to redirect messages to another object and can be an order of magnitude faster than regular forwarding. It is not useful where the goal of the forwarding is to capture the NSInvocation, or manipulate the arguments or return value during the forwarding.</p><p>“当您只想将消息重定向到另一个对象，并且比常规转发快一个数量级时，此功能很有用”</p></blockquote><p>来研究下如何使用，我们创建一个 <code>Teacher</code> 类，但不继承 <code>Person</code>，那我们想让 <code>Teacher</code> 调用 <code>Person</code> 的 <code>sleep</code> 方法，通过快速转发应该如何实现：</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=c1>// Teacher.m
+</span><span class=c1></span><span class=k>@implementation</span> <span class=nc>Teacher</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>teach</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;I am teaching&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>id</span><span class=p>)</span><span class=nf>forwardingTargetForSelector:</span><span class=p>(</span><span class=kt>SEL</span><span class=p>)</span><span class=nv>aSelector</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;%s&#34;</span><span class=p>,</span> <span class=n>__func__</span><span class=p>);</span>
+    <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+    <span class=k>if</span> <span class=p>([</span><span class=n>p</span> <span class=nl>respondsToSelector</span><span class=p>:</span> <span class=n>aSelector</span><span class=p>])</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>p</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=p>[</span><span class=nb>super</span> <span class=nl>forwardingTargetForSelector</span><span class=p>:</span> <span class=n>aSelector</span><span class=p>];</span>
+<span class=p>}</span>
+
+<span class=k>@end</span>
+
+<span class=c1>// main.m 中即可实现 Teacher 调用 sleep
+</span><span class=c1></span> <span class=n>Teacher</span> <span class=o>*</span><span class=n>t</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Teacher</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+ <span class=p>[</span><span class=n>t</span> <span class=nl>performSelector</span><span class=p>:</span><span class=k>@selector</span><span class=p>(</span><span class=n>sleep</span><span class=p>)];</span>
+</code></pre></div><figure><img src=./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1617087298428-df71897e-0fcd-4170-8ca0-3e233bd24d9c.png width=80%></figure><h3 id=42-methodsignatureforselector>4.2 methodSignatureForSelector</h3><p>也没有具体实现，同样看下文档</p><blockquote><p>This method is used in the implementation of protocols. This method is also used in situations where an <code>NSInvocation</code> object must be created, such as during message forwarding. If your object maintains a delegate or is capable of handling messages that it does not directly implement, you should override this method to return an appropriate method signature.</p><p>“用于 <code>NSInvocation</code> 必须创建对象的情况下，例如在消息转发期间”</p></blockquote><p>接着会调用 <code>forwardInvocation:</code> 方法进行消息转发。</p><p>同样，我们想实现 <code>forwardingTargetForSelector</code> 中展示的那种能力，看看利用 <code>methodSignatureForSelector</code> + <code>forwardInvocation</code> 如何code.</p><p>我们继续在 <code>Teacher</code> 类中施加魔法：</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=c1>// Teacher.m
+</span><span class=c1></span><span class=k>@implementation</span> <span class=nc>Teacher</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=n>NSMethodSignature</span> <span class=o>*</span><span class=p>)</span><span class=nf>methodSignatureForSelector:</span><span class=p>(</span><span class=kt>SEL</span><span class=p>)</span><span class=nv>aSelector</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;%s&#34;</span><span class=p>,</span> <span class=n>__func__</span><span class=p>);</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>aSelector</span> <span class=o>==</span> <span class=k>@selector</span><span class=p>(</span><span class=n>walk</span><span class=p>))</span> <span class=p>{</span>
+        <span class=c1>// 获取 SEL 方法签名
+</span><span class=c1></span>        <span class=n>NSMethodSignature</span> <span class=o>*</span><span class=n>sig</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>new</span><span class=p>]</span> <span class=nl>methodSignatureForSelector</span><span class=p>:</span><span class=n>aSelector</span><span class=p>];</span>
+        <span class=k>return</span> <span class=n>sig</span><span class=p>;</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=p>[</span><span class=nb>super</span> <span class=nl>methodSignatureForSelector</span><span class=p>:</span><span class=n>aSelector</span><span class=p>];</span>
+<span class=p>}</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>forwardInvocation:</span><span class=p>(</span><span class=n>NSInvocation</span> <span class=o>*</span><span class=p>)</span><span class=nv>anInvocation</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;%@&#34;</span><span class=p>,</span> <span class=n>anInvocation</span><span class=p>);</span>
+    <span class=c1>// 获取 SEL 消息
+</span><span class=c1></span>    <span class=kt>SEL</span> <span class=n>s</span> <span class=o>=</span> <span class=p>[</span><span class=n>anInvocation</span> <span class=n>selector</span><span class=p>];</span>
+    <span class=c1>// 实例化 Person 类
+</span><span class=c1></span>    <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+    <span class=c1>// 向接收对象 p 发送 SEL 消息
+</span><span class=c1></span>    <span class=k>if</span> <span class=p>([</span><span class=n>p</span> <span class=nl>respondsToSelector</span><span class=p>:</span><span class=n>s</span><span class=p>])</span> <span class=p>{</span>
+        <span class=p>[</span><span class=n>anInvocation</span> <span class=nl>invokeWithTarget</span><span class=p>:</span><span class=n>p</span><span class=p>];</span>
+    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=p>[</span><span class=nb>super</span> <span class=nl>forwardInvocation</span><span class=p>:</span><span class=n>anInvocation</span><span class=p>];</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=k>@end</span>
+
+<span class=c1>// main.m 中实现 Teacher 调用 walk
+</span><span class=c1>// methodSignatureForSelector + forwardInvocation
+</span><span class=c1></span><span class=p>[</span><span class=n>t</span> <span class=nl>performSelector</span><span class=p>:</span><span class=k>@selector</span><span class=p>(</span><span class=n>walk</span><span class=p>)];</span>
+</code></pre></div><div class="details admonition warning open"><div class="details-summary admonition-title"><i class="icon fas fa-exclamation-triangle fa-fw"></i>Warning<i class="details-icon fas fa-angle-right fa-fw"></i></div><div class=details-content><div class=admonition-content>请注释掉4.1中的 <code>- (id)forwardingTargetForSelector:(SEL)aSelector</code> 实现，否则会优先执行快速转发机制而不会走到 <code>methodSignatureForSelector</code> 中。</div></div></div><p><img class=lazyload src=/svg/loading.min.svg data-src=./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1617087769890-8bea3c09-5d83-459c-a07c-282021fd377b.png data-srcset="./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1617087769890-8bea3c09-5d83-459c-a07c-282021fd377b.png, ./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1617087769890-8bea3c09-5d83-459c-a07c-282021fd377b.png 1.5x, ./%e6%96%b9%e6%b3%95%e6%9f%a5%e6%89%be%e5%92%8c%e6%b6%88%e6%81%af%e8%bd%ac%e5%8f%91.assets/1617087769890-8bea3c09-5d83-459c-a07c-282021fd377b.png 2x" data-sizes=auto alt=./方法查找和消息转发.assets/1617087769890-8bea3c09-5d83-459c-a07c-282021fd377b.png title=image.png></p><p>这个消息转发原理我们后续会在一些经典的 <code>AOP</code> 框架分析中看到其利用。</p><h2 id=总结>总结</h2><p>整个流程包括 缓存查找 -> 本类父类方法查找 -> 动态方法解析 -> 快速消息转发 -> 慢速消息转发。而其中<strong>动态方法解析</strong>、<strong>快速消息转发</strong>和<strong>慢速消息转发</strong>就是 🍎 给的额外三次寻找 <code>IMP</code> 的机会。</p><p>至此 <code>obj_msgSend</code> 的整个流程梳理完毕，其中很多细节建议读者自己去阅读探寻。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2021-03-15</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/ios.html>iOS</a>,&nbsp;<a href=/tags/aop.html>AOP</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html class=prev rel=prev title=OC方法&OC类&OC对象><i class="fas fa-angle-left fa-fw"></i>OC方法&OC类&OC对象</a>
+<a href=/posts/method-swizzling.html class=next rel=next title="Method Swizzling">Method Swizzling<i class="fas fa-angle-right fa-fw"></i></a></div></div><div id=comments><div id=valine class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://valine.js.org/>Valine</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2018 - 2021</span>&nbsp;|&nbsp;<span class=license>Houugen</span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw"></i></a></div><link rel=stylesheet href=/lib/valine/valine.min.css><script type=text/javascript src=/lib/valine/Valine.min.js></script><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/autocomplete/autocomplete.min.js></script><script type=text/javascript src=/lib/algoliasearch/algoliasearch-lite.umd.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:20},comment:{valine:{appId:"QhRivi4Qm3PjvD0WoqEiJv5n-gzGzoHsz",appKey:"gHPJRKJ7Vfi2xHjiJ3AcP92S",avatar:"mp",el:"#valine",emojiCDN:"https://cdn.jsdelivr.net/npm/emoji-datasource-google@5.0.1/img/google/64/",emojiMaps:{100:"1f4af.png",alien:"1f47d.png",anger:"1f4a2.png",angry:"1f620.png",anguished:"1f627.png",astonished:"1f632.png",black_heart:"1f5a4.png",blue_heart:"1f499.png",blush:"1f60a.png",bomb:"1f4a3.png",boom:"1f4a5.png",broken_heart:"1f494.png",brown_heart:"1f90e.png",clown_face:"1f921.png",cold_face:"1f976.png",cold_sweat:"1f630.png",confounded:"1f616.png",confused:"1f615.png",cry:"1f622.png",crying_cat_face:"1f63f.png",cupid:"1f498.png",dash:"1f4a8.png",disappointed:"1f61e.png",disappointed_relieved:"1f625.png",dizzy:"1f4ab.png",dizzy_face:"1f635.png",drooling_face:"1f924.png",exploding_head:"1f92f.png",expressionless:"1f611.png",face_vomiting:"1f92e.png",face_with_cowboy_hat:"1f920.png",face_with_hand_over_mouth:"1f92d.png",face_with_head_bandage:"1f915.png",face_with_monocle:"1f9d0.png",face_with_raised_eyebrow:"1f928.png",face_with_rolling_eyes:"1f644.png",face_with_symbols_on_mouth:"1f92c.png",face_with_thermometer:"1f912.png",fearful:"1f628.png",flushed:"1f633.png",frowning:"1f626.png",ghost:"1f47b.png",gift_heart:"1f49d.png",green_heart:"1f49a.png",grimacing:"1f62c.png",grin:"1f601.png",grinning:"1f600.png",hankey:"1f4a9.png",hear_no_evil:"1f649.png",heart:"2764-fe0f.png",heart_decoration:"1f49f.png",heart_eyes:"1f60d.png",heart_eyes_cat:"1f63b.png",heartbeat:"1f493.png",heartpulse:"1f497.png",heavy_heart_exclamation_mark_ornament:"2763-fe0f.png",hole:"1f573-fe0f.png",hot_face:"1f975.png",hugging_face:"1f917.png",hushed:"1f62f.png",imp:"1f47f.png",innocent:"1f607.png",japanese_goblin:"1f47a.png",japanese_ogre:"1f479.png",joy:"1f602.png",joy_cat:"1f639.png",kiss:"1f48b.png",kissing:"1f617.png",kissing_cat:"1f63d.png",kissing_closed_eyes:"1f61a.png",kissing_heart:"1f618.png",kissing_smiling_eyes:"1f619.png",laughing:"1f606.png",left_speech_bubble:"1f5e8-fe0f.png",love_letter:"1f48c.png",lying_face:"1f925.png",mask:"1f637.png",money_mouth_face:"1f911.png",nauseated_face:"1f922.png",nerd_face:"1f913.png",neutral_face:"1f610.png",no_mouth:"1f636.png",open_mouth:"1f62e.png",orange_heart:"1f9e1.png",partying_face:"1f973.png",pensive:"1f614.png",persevere:"1f623.png",pleading_face:"1f97a.png",pouting_cat:"1f63e.png",purple_heart:"1f49c.png",rage:"1f621.png",relaxed:"263a-fe0f.png",relieved:"1f60c.png",revolving_hearts:"1f49e.png",right_anger_bubble:"1f5ef-fe0f.png",robot_face:"1f916.png",rolling_on_the_floor_laughing:"1f923.png",scream:"1f631.png",scream_cat:"1f640.png",see_no_evil:"1f648.png",shushing_face:"1f92b.png",skull:"1f480.png",skull_and_crossbones:"2620-fe0f.png",sleeping:"1f634.png",sleepy:"1f62a.png",slightly_frowning_face:"1f641.png",slightly_smiling_face:"1f642.png",smile:"1f604.png",smile_cat:"1f638.png",smiley:"1f603.png",smiley_cat:"1f63a.png",smiling_face_with_3_hearts:"1f970.png",smiling_imp:"1f608.png",smirk:"1f60f.png",smirk_cat:"1f63c.png",sneezing_face:"1f927.png",sob:"1f62d.png",space_invader:"1f47e.png",sparkling_heart:"1f496.png",speak_no_evil:"1f64a.png",speech_balloon:"1f4ac.png","star-struck":"1f929.png",stuck_out_tongue:"1f61b.png",stuck_out_tongue_closed_eyes:"1f61d.png",stuck_out_tongue_winking_eye:"1f61c.png",sunglasses:"1f60e.png",sweat:"1f613.png",sweat_drops:"1f4a6.png",sweat_smile:"1f605.png",thinking_face:"1f914.png",thought_balloon:"1f4ad.png",tired_face:"1f62b.png",triumph:"1f624.png",two_hearts:"1f495.png",unamused:"1f612.png",upside_down_face:"1f643.png",weary:"1f629.png",white_frowning_face:"2639-fe0f.png",white_heart:"1f90d.png",wink:"1f609.png",woozy_face:"1f974.png",worried:"1f61f.png",yawning_face:"1f971.png",yellow_heart:"1f49b.png",yum:"1f60b.png",zany_face:"1f92a.png",zipper_mouth_face:"1f910.png",zzz:"1f4a4.png"},enableQQ:!1,highlight:!0,lang:"en",pageSize:10,placeholder:"Your comment ...",recordIP:!0,serverURLs:"https://leancloud.cn",visitor:!0}},search:{algoliaAppID:"63ROI1DYLO",algoliaIndex:"houugen_blog",algoliaSearchKey:"0282c2777b386667ccc099a27da8a3cb",highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:30,type:"algolia"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

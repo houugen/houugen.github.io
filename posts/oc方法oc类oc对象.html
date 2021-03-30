@@ -1,0 +1,246 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><meta http-equiv=x-ua-compatible content="IE=edge, chrome=1"><title>OC方法&OC类&OC对象 -</title><meta name=Description content="This is Houugen's Hugo Site"><meta property="og:title" content="OC方法&OC类&OC对象"><meta property="og:description" content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   Tip  源码分析环境：objc4-818.2   OC方法 通过之前的文章 Mach-O文件结构分析 我们得知OC方法在编译时调用了 objc_msgSend 函数
+int main(int argc, const char * argv[]) { @autoreleasepool { // insert code here...  NSLog(@&#34;Hello, World!&#34;); Person *p = [[Person alloc] init]; [p walk]; [p ill]; [p sleep]; run(); } return 0; } clang -rewrite-objc main.m -o main.cpp"><meta property="og:type" content="article"><meta property="og:url" content="http://houugen.fun/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-03-10T21:00:00+00:00"><meta property="article:modified_time" content="2021-03-10T21:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="OC方法&OC类&OC对象"><meta name=twitter:description content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   Tip  源码分析环境：objc4-818.2   OC方法 通过之前的文章 Mach-O文件结构分析 我们得知OC方法在编译时调用了 objc_msgSend 函数
+int main(int argc, const char * argv[]) { @autoreleasepool { // insert code here...  NSLog(@&#34;Hello, World!&#34;); Person *p = [[Person alloc] init]; [p walk]; [p ill]; [p sleep]; run(); } return 0; } clang -rewrite-objc main.m -o main.cpp"><meta name=application-name content><meta name=apple-mobile-web-app-title content><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=http://houugen.fun/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html><link rel=prev href=http://houugen.fun/posts/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5.html><link rel=next href=http://houugen.fun/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"OC方法\u0026OC类\u0026OC对象","inLanguage":"en","mainEntityOfPage":{"@type":"WebPage","@id":"http:\/\/houugen.fun\/posts\/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html"},"genre":"posts","keywords":"iOS, AOP","wordcount":746,"url":"http:\/\/houugen.fun\/posts\/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html","datePublished":"2021-03-10T21:00:00+00:00","dateModified":"2021-03-10T21:00:00+00:00","publisher":{"@type":"Organization","name":"Houugen"},"author":{"@type":"Person","name":"Houugen"},"description":""}</script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'dark'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'dark'==='dark')&&document.body.setAttribute('theme','dark')</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts.html>Posts </a><a class=menu-item href=/tags.html>Tags </a><a class=menu-item href=/categories.html>Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop><input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin"></i></span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw"></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin"></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts.html title>Posts</a><a class=menu-item href=/tags.html title>Tags</a><a class=menu-item href=/categories.html title>Categories</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw"></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animated flipInX">OC方法&OC类&OC对象</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=/ title=Author rel=" author" class=author><i class="fas fa-user-circle fa-fw"></i>Houugen</a></span>&nbsp;<span class=post-category>included in <a href=/categories/ios.html><i class="far fa-folder fa-fw"></i>iOS</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-03-10>2021-03-10</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;746 words&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;4 minutes&nbsp;<span id=/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html class=leancloud_visitors data-flag-title=OC方法&OC类&OC对象>
+<i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+</span>&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#oc方法>OC方法</a></li><li><a href=#oc类oc对象>OC类/OC对象</a></li><li><a href=#元类metaclass>元类（metaclass）</a></li><li><a href=#isa指针>isa指针</a></li><li><a href=#实例对象>实例对象</a></li></ul></nav></div></div><div class=content id=content><blockquote><p>iOS AOP文章系列</p><p>前导知识：</p><ul><li>Mach-O文件结构分析</li><li>静态链接&动态链接</li><li>OC方法&OC类&OC对象</li><li>方法查找和消息转发</li></ul><p>AOP框架：</p><ul><li>Method Swizzling</li><li>Fishhook</li><li>Apsects</li><li>NSProxy AOP</li></ul></blockquote><div class="details admonition tip open"><div class="details-summary admonition-title"><i class="icon fas fa-lightbulb fa-fw"></i>Tip<i class="details-icon fas fa-angle-right fa-fw"></i></div><div class=details-content><div class=admonition-content><strong>源码分析环境：objc4-818.2</strong></div></div></div><h2 id=oc方法>OC方法</h2><p>通过之前的文章 <a href=https://houugen.fun/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html target=_blank rel="noopener noreffer">Mach-O文件结构分析</a> 我们得知OC方法在编译时调用了 <code>objc_msgSend</code> 函数</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+    <span class=k>@autoreleasepool</span> <span class=p>{</span>
+        <span class=c1>// insert code here...
+</span><span class=c1></span>        <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;Hello, World!&#34;</span><span class=p>);</span>
+        
+        <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>walk</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>ill</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>sleep</span><span class=p>];</span>
+        
+        <span class=n>run</span><span class=p>();</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p><code>clang -rewrite-objc main.m -o main.cpp</code></p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+    <span class=cm>/* @autoreleasepool */</span> <span class=p>{</span> <span class=n>__AtAutoreleasePool</span> <span class=n>__autoreleasepool</span><span class=p>;</span> 
+
+        <span class=n>NSLog</span><span class=p>((</span><span class=n>NSString</span> <span class=o>*</span><span class=p>)</span><span class=o>&amp;</span><span class=n>__NSConstantStringImpl__var_folders_16_fnqk_6_50_z264j18b83nb9w0000gp_T_main_c8b264_mi_1</span><span class=p>);</span>
+
+        <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>((</span><span class=n>Person</span> <span class=o>*</span><span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)((</span><span class=n>Person</span> <span class=o>*</span><span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>objc_getClass</span><span class=p>(</span><span class=s>&#34;Person&#34;</span><span class=p>),</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;alloc&#34;</span><span class=p>)),</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;init&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;walk&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;ill&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;sleep&#34;</span><span class=p>));</span>
+
+        <span class=n>run</span><span class=p>();</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p><code>obj_msgSend</code> 函数有两个参数 <code>id</code>、<code>SEL</code>，<code>id</code> 是操作对象，<code>SEL</code> 则通过消息发送机制查找对应 <code>imp</code>。</p><p>因此OC方法本质就是调用 <code>obj_msgSend</code> 函数。</p><p>关于 <code>obj_msgSend</code> 的消息查找和消息发送在后续文章中详细介绍。</p><h2 id=oc类oc对象>OC类/OC对象</h2><p><code>Person *p = [[Person alloc] init];</code></p><p>我们在 <code>main.cpp</code> 文件以及源码中看下 <code>Person</code> 类（class）和 <code>p</code> 对象（id）的结构体</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// main.cpp
+</span><span class=c1></span><span class=k>struct</span> <span class=nc>Person_IMPL</span> <span class=p>{</span>
+    <span class=k>struct</span> <span class=nc>NSObject_IMPL</span> <span class=n>NSObject_IVARS</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=k>struct</span> <span class=nc>NSObject_IMPL</span> <span class=p>{</span>
+    <span class=n>Class</span> <span class=n>isa</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=k>typedef</span> <span class=k>struct</span> <span class=nc>objc_class</span> <span class=o>*</span><span class=n>Class</span><span class=p>;</span>
+<span class=k>typedef</span> <span class=k>struct</span> <span class=nc>objc_object</span> <span class=o>*</span><span class=n>id</span><span class=p>;</span>
+
+<span class=c1>// objc-runtime-new.h
+</span><span class=c1></span><span class=k>struct</span> <span class=nc>objc_class</span> <span class=o>:</span> <span class=n>objc_object</span> <span class=p>{</span>
+    <span class=c1>// Class ISA;
+</span><span class=c1></span>    <span class=n>Class</span> <span class=n>superclass</span><span class=p>;</span>
+    <span class=n>cache_t</span> <span class=n>cache</span><span class=p>;</span>             <span class=c1>// formerly cache pointer and vtable
+</span><span class=c1></span>    <span class=n>class_data_bits_t</span> <span class=n>bits</span><span class=p>;</span>    <span class=c1>// class_rw_t * plus custom rr/alloc flags
+</span><span class=c1></span>    <span class=n>class_rw_t</span> <span class=o>*</span><span class=nf>data</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>bits</span><span class=p>.</span><span class=n>data</span><span class=p>();</span>
+    <span class=p>}</span>
+    <span class=p>...</span>
+ <span class=p>}</span>
+
+<span class=c1>// objc-private.h
+</span><span class=c1></span><span class=k>struct</span> <span class=nc>objc_object</span> <span class=p>{</span>
+<span class=k>private</span><span class=o>:</span>
+    <span class=n>isa_t</span> <span class=n>isa</span><span class=p>;</span>
+<span class=k>public</span><span class=o>:</span>
+    <span class=c1>// ISA() assumes this is NOT a tagged pointer object
+</span><span class=c1></span>    <span class=n>Class</span> <span class=n>ISA</span><span class=p>(</span><span class=kt>bool</span> <span class=n>authenticated</span> <span class=o>=</span> <span class=nb>false</span><span class=p>);</span>
+    <span class=c1>// rawISA() assumes this is NOT a tagged pointer object or a non pointer ISA
+</span><span class=c1></span>    <span class=n>Class</span> <span class=nf>rawISA</span><span class=p>();</span>
+    <span class=c1>// getIsa() allows this to be a tagged pointer object
+</span><span class=c1></span>    <span class=n>Class</span> <span class=nf>getIsa</span><span class=p>();</span>
+    <span class=p>...</span>
+ <span class=p>}</span>
+</code></pre></div><p><code>Person</code> 类是一个 <code>objc_class</code> 结构体，而 <code>objc_class</code> 继承自 <code>objc_object</code>，说明类本身也是一个对象，称之为类对象。</p><p>类包含:</p><ul><li><code>isa</code> // 为了内存优化，设计成 <code>isa_t</code> 结构体，指向元类</li><li><code>superclass</code> // 父类指针</li><li><code>cache</code> // 该类的方法缓存</li><li><code>bits</code> // 该类的具体信息</li><li><code>data</code> // 存放类的方法、属性、协议等信息</li></ul><p>首先看下 <code>cache_t</code> 结构体，主要作为存储方法缓存，具体原理我们在<strong>方法缓存查找</strong>文章中讲解：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>cache_t</span> <span class=p>{</span>
+    <span class=p>...</span>
+<span class=nl>public</span><span class=p>:</span>
+    <span class=n>mask_t</span> <span class=n>mask</span><span class=p>()</span> <span class=k>const</span><span class=p>;</span> <span class=c1>// 缓存数组的容量临界值
+</span><span class=c1></span>    <span class=k>struct</span> <span class=n>bucket_t</span> <span class=o>*</span><span class=nf>buckets</span><span class=p>()</span> <span class=k>const</span><span class=p>;</span>  <span class=c1>// 方法缓存数组
+</span><span class=c1></span>    <span class=n>Class</span> <span class=nf>cls</span><span class=p>()</span> <span class=k>const</span><span class=p>;</span>
+    <span class=n>mask_t</span> <span class=nf>occupied</span><span class=p>()</span> <span class=k>const</span><span class=p>;</span> <span class=c1>// 缓存数组中已缓存方法数量
+</span><span class=c1></span>    <span class=p>...</span>
+<span class=p>}</span>
+
+<span class=k>struct</span> <span class=n>bucket_t</span> <span class=p>{</span>
+<span class=nl>private</span><span class=p>:</span>
+<span class=cp>#if __arm64__
+</span><span class=cp></span>    <span class=n>explicit_atomic</span><span class=o>&lt;</span><span class=n>uintptr_t</span><span class=o>&gt;</span> <span class=n>_imp</span><span class=p>;</span>
+    <span class=n>explicit_atomic</span><span class=o>&lt;</span><span class=n>SEL</span><span class=o>&gt;</span> <span class=n>_sel</span><span class=p>;</span>
+<span class=cp>#else
+</span><span class=cp></span>    <span class=n>explicit_atomic</span><span class=o>&lt;</span><span class=n>SEL</span><span class=o>&gt;</span> <span class=n>_sel</span><span class=p>;</span>
+    <span class=n>explicit_atomic</span><span class=o>&lt;</span><span class=n>uintptr_t</span><span class=o>&gt;</span> <span class=n>_imp</span><span class=p>;</span>
+<span class=cp>#endif
+</span><span class=cp></span>    <span class=p>...</span>
+<span class=p>}</span>
+</code></pre></div><p>再看下 <code>class_data_bits_t</code> 结构体：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=k>struct</span> <span class=n>class_data_bits_t</span> <span class=p>{</span>
+    <span class=n>friend</span> <span class=n>objc_class</span><span class=p>;</span>
+    <span class=c1>// Values are the FAST_ flags above.
+</span><span class=c1></span>    <span class=n>uintptr_t</span> <span class=n>bits</span><span class=p>;</span>
+    <span class=p>...</span>
+<span class=nl>public</span><span class=p>:</span>
+    <span class=n>class_rw_t</span><span class=o>*</span> <span class=n>data</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=p>(</span><span class=n>class_rw_t</span> <span class=o>*</span><span class=p>)(</span><span class=n>bits</span> <span class=o>&amp;</span> <span class=n>FAST_DATA_MASK</span><span class=p>);</span>
+    <span class=p>}</span>
+    <span class=p>...</span>
+<span class=p>}</span>
+
+<span class=k>struct</span> <span class=n>class_rw_t</span> <span class=p>{</span>
+    <span class=c1>// Be warned that Symbolication knows the layout of this structure.
+</span><span class=c1></span>    <span class=n>uint32_t</span> <span class=n>flags</span><span class=p>;</span>
+    <span class=n>uint16_t</span> <span class=n>witness</span><span class=p>;</span>
+<span class=cp>#if SUPPORT_INDEXED_ISA
+</span><span class=cp></span>    <span class=n>uint16_t</span> <span class=n>index</span><span class=p>;</span>
+<span class=cp>#endif
+</span><span class=cp></span>    <span class=n>explicit_atomic</span><span class=o>&lt;</span><span class=n>uintptr_t</span><span class=o>&gt;</span> <span class=n>ro_or_rw_ext</span><span class=p>;</span>
+    <span class=n>Class</span> <span class=n>firstSubclass</span><span class=p>;</span>
+    <span class=n>Class</span> <span class=n>nextSiblingClass</span><span class=p>;</span>
+    <span class=p>...</span>
+<span class=nl>public</span><span class=p>:</span>
+    <span class=p>...</span>
+    <span class=k>const</span> <span class=n>method_array_t</span> <span class=n>methods</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span>
+        <span class=k>auto</span> <span class=n>v</span> <span class=o>=</span> <span class=n>get_ro_or_rwe</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>v</span><span class=p>.</span><span class=n>is</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>methods</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>method_array_t</span><span class=p>{</span><span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=k>const</span> <span class=n>class_ro_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>baseMethods</span><span class=p>()};</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>const</span> <span class=n>property_array_t</span> <span class=n>properties</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span>
+        <span class=k>auto</span> <span class=n>v</span> <span class=o>=</span> <span class=n>get_ro_or_rwe</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>v</span><span class=p>.</span><span class=n>is</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>properties</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>property_array_t</span><span class=p>{</span><span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=k>const</span> <span class=n>class_ro_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>baseProperties</span><span class=p>};</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>const</span> <span class=n>protocol_array_t</span> <span class=n>protocols</span><span class=p>()</span> <span class=k>const</span> <span class=p>{</span>
+        <span class=k>auto</span> <span class=n>v</span> <span class=o>=</span> <span class=n>get_ro_or_rwe</span><span class=p>();</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>v</span><span class=p>.</span><span class=n>is</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>())</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=n>class_rw_ext_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>protocols</span><span class=p>;</span>
+        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+            <span class=k>return</span> <span class=n>protocol_array_t</span><span class=p>{</span><span class=n>v</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=k>const</span> <span class=n>class_ro_t</span> <span class=o>*&gt;</span><span class=p>(</span><span class=o>&amp;</span><span class=n>ro_or_rw_ext</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>baseProtocols</span><span class=p>};</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>};</span>
+</code></pre></div><p>其中即存放着方法列表、属性列表、协议列表等</p><div class="details admonition warning open"><div class="details-summary admonition-title"><i class="icon fas fa-exclamation-triangle fa-fw"></i>Warning<i class="details-icon fas fa-angle-right fa-fw"></i></div><div class=details-content><div class=admonition-content>需要注意类存放对象方法，元类存放类方法</div></div></div><p>现在我们回头看下<a href=https://houugen.fun/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html target=_blank rel="noopener noreffer">Mach-O文件结构分析</a>中介绍的 <code>Section64(__DATA,__objc_data)</code> 分布，存储的是 <code>objc_calss</code> 类结构，是不是一目了然：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616642755748-ce473e01-9790-4faa-bc51-04ab4734fc2e.png data-srcset="./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616642755748-ce473e01-9790-4faa-bc51-04ab4734fc2e.png, ./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616642755748-ce473e01-9790-4faa-bc51-04ab4734fc2e.png 1.5x, ./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616642755748-ce473e01-9790-4faa-bc51-04ab4734fc2e.png 2x" data-sizes=auto alt=./OC方法&OC类&OC对象.assets/1616642755748-ce473e01-9790-4faa-bc51-04ab4734fc2e.png title=image.png></p><p>而存储与<code>Section64(__DATA,__objc_const)</code> 的 <code>class_rw_t</code> 结构体分布也得以验证。</p><h2 id=元类metaclass>元类（metaclass）</h2><p>既然类也是一个对象，那么它一定是其他类的实例，那个类就是元类 (<code>metaclass</code>)。元类是类（对象）的描述，就像类是普通实例的描述一样。特别的是，元类的方法列表是类方法。当你发送消息给一个类，<code>objc_msgSend</code> 会查找元类（已及它的父类）的方法列表并确定调用的方法。</p><p>可以从创建类的过程来了解下元类，我们为 <code>Person</code> 添加一个子类 <code>Student</code>：</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=kt>void</span> <span class=nf>StudyFunction</span><span class=p>(</span><span class=kt>id</span> <span class=nb>self</span><span class=p>,</span> <span class=kt>SEL</span> <span class=n>_cmd</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;i am studing&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+    
+    <span class=k>@autoreleasepool</span> <span class=p>{</span>
+        <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+        <span class=n>p</span><span class=p>.</span><span class=n>age</span> <span class=o>=</span> <span class=mi>26</span><span class=p>;</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>walk</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>sleep</span><span class=p>];</span>
+        
+        <span class=n>run</span><span class=p>();</span>
+        
+        <span class=c1>// 为class pair分配内存
+</span><span class=c1></span>        <span class=kt>Class</span> <span class=n>newClass</span> <span class=o>=</span> <span class=n>objc_allocateClassPair</span><span class=p>([</span><span class=n>Person</span> <span class=k>class</span><span class=p>],</span> <span class=s>&#34;Student&#34;</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+        <span class=c1>// 为新类添加方法
+</span><span class=c1></span>        <span class=n>class_addMethod</span><span class=p>(</span><span class=n>newClass</span><span class=p>,</span> <span class=k>@selector</span><span class=p>(</span><span class=n>study</span><span class=p>),</span> <span class=p>(</span><span class=kt>IMP</span><span class=p>)</span><span class=n>StudyFunction</span><span class=p>,</span> <span class=s>&#34;v@:&#34;</span><span class=p>);</span>
+        <span class=c1>// 注册类
+</span><span class=c1></span>        <span class=n>objc_registerClassPair</span><span class=p>(</span><span class=n>newClass</span><span class=p>);</span>
+        <span class=c1>// 初始化实例对象
+</span><span class=c1></span>        <span class=kt>id</span> <span class=n>s</span> <span class=o>=</span> <span class=p>[[</span><span class=n>newClass</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+        <span class=c1>// 调用本类 study 方法
+</span><span class=c1></span>        <span class=p>[</span><span class=n>s</span> <span class=nl>performSelector</span><span class=p>:</span><span class=k>@selector</span><span class=p>(</span><span class=n>study</span><span class=p>)];</span>
+        <span class=c1>// 调用父类 sleep 方法
+</span><span class=c1></span>        <span class=p>[</span><span class=n>s</span> <span class=n>sleep</span><span class=p>];</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p><code>Student</code> 实例对象调用 <code>Person</code> 类方法，会查找自己的类和父类的方法列表：</p><figure><img src=./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1617086199587-e0a66569-c86b-452d-811b-0425e76f9709.png width=80%></figure><p>我们看一下 <code>objc_allocateClassPair</code> 源码：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=n>Class</span> <span class=nf>objc_initializeClassPair</span><span class=p>(</span><span class=n>Class</span> <span class=n>superclass</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>name</span><span class=p>,</span> <span class=n>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=n>Class</span> <span class=n>meta</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=c1>// Fail if the class name is in use.
+</span><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>look_up_class</span><span class=p>(</span><span class=n>name</span><span class=p>,</span> <span class=n>NO</span><span class=p>,</span> <span class=n>NO</span><span class=p>))</span> <span class=k>return</span> <span class=n>nil</span><span class=p>;</span>
+
+    <span class=n>mutex_locker_t</span> <span class=n>lock</span><span class=p>(</span><span class=n>runtimeLock</span><span class=p>);</span>
+
+    <span class=c1>// Fail if the class name is in use.
+</span><span class=c1></span>    <span class=c1>// Fail if the superclass isn&#39;t kosher.
+</span><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>getClassExceptSomeSwift</span><span class=p>(</span><span class=n>name</span><span class=p>)</span>  <span class=o>||</span>
+        <span class=o>!</span><span class=n>verifySuperclass</span><span class=p>(</span><span class=n>superclass</span><span class=p>,</span> <span class=nb>true</span><span class=cm>/*rootOK*/</span><span class=p>))</span>
+    <span class=p>{</span>
+        <span class=k>return</span> <span class=n>nil</span><span class=p>;</span>
+    <span class=p>}</span>
+
+    <span class=n>objc_initializeClassPair_internal</span><span class=p>(</span><span class=n>superclass</span><span class=p>,</span> <span class=n>name</span><span class=p>,</span> <span class=n>cls</span><span class=p>,</span> <span class=n>meta</span><span class=p>);</span>
+
+    <span class=k>return</span> <span class=n>cls</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=k>static</span> <span class=kt>void</span> <span class=nf>objc_initializeClassPair_internal</span><span class=p>(</span><span class=n>Class</span> <span class=n>superclass</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>name</span><span class=p>,</span> <span class=n>Class</span> <span class=n>cls</span><span class=p>,</span> <span class=n>Class</span> <span class=n>meta</span><span class=p>)</span>
+<span class=p>{</span>
+    <span class=p>...</span>
+    <span class=n>class_ro_t</span> <span class=o>*</span><span class=n>cls_ro_w</span><span class=p>,</span> <span class=o>*</span><span class=n>meta_ro_w</span><span class=p>;</span>
+    <span class=n>class_rw_t</span> <span class=o>*</span><span class=n>cls_rw_w</span><span class=p>,</span> <span class=o>*</span><span class=n>meta_rw_w</span><span class=p>;</span>
+    
+    <span class=n>cls_rw_w</span>   <span class=o>=</span> <span class=n>objc</span><span class=o>::</span><span class=n>zalloc</span><span class=o>&lt;</span><span class=n>class_rw_t</span><span class=o>&gt;</span><span class=p>();</span>
+    <span class=n>meta_rw_w</span>  <span class=o>=</span> <span class=n>objc</span><span class=o>::</span><span class=n>zalloc</span><span class=o>&lt;</span><span class=n>class_rw_t</span><span class=o>&gt;</span><span class=p>();</span>
+    <span class=n>cls_ro_w</span>   <span class=o>=</span> <span class=p>(</span><span class=n>class_ro_t</span> <span class=o>*</span><span class=p>)</span><span class=n>calloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=n>class_ro_t</span><span class=p>),</span> <span class=mi>1</span><span class=p>);</span>
+    <span class=n>meta_ro_w</span>  <span class=o>=</span> <span class=p>(</span><span class=n>class_ro_t</span> <span class=o>*</span><span class=p>)</span><span class=n>calloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=n>class_ro_t</span><span class=p>),</span> <span class=mi>1</span><span class=p>);</span>
+
+    <span class=p>...</span>
+
+    <span class=c1>// Set basic info
+</span><span class=c1></span>    <span class=p>...</span>
+
+    <span class=c1>// Connect to superclasses and metaclasses
+</span><span class=c1></span>    <span class=n>cls</span><span class=o>-&gt;</span><span class=n>initClassIsa</span><span class=p>(</span><span class=n>meta</span><span class=p>);</span>  <span class=c1>// 0
+</span><span class=c1></span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>superclass</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>meta</span><span class=o>-&gt;</span><span class=n>initClassIsa</span><span class=p>(</span><span class=n>superclass</span><span class=o>-&gt;</span><span class=n>ISA</span><span class=p>()</span><span class=o>-&gt;</span><span class=n>ISA</span><span class=p>());</span> <span class=c1>// 1
+</span><span class=c1></span>        <span class=n>cls</span><span class=o>-&gt;</span><span class=n>setSuperclass</span><span class=p>(</span><span class=n>superclass</span><span class=p>);</span> <span class=c1>// 2
+</span><span class=c1></span>        <span class=n>meta</span><span class=o>-&gt;</span><span class=n>setSuperclass</span><span class=p>(</span><span class=n>superclass</span><span class=o>-&gt;</span><span class=n>ISA</span><span class=p>());</span> <span class=c1>// 3
+</span><span class=c1></span>        <span class=n>addSubclass</span><span class=p>(</span><span class=n>superclass</span><span class=p>,</span> <span class=n>cls</span><span class=p>);</span> <span class=c1>// 4
+</span><span class=c1></span>        <span class=n>addSubclass</span><span class=p>(</span><span class=n>superclass</span><span class=o>-&gt;</span><span class=n>ISA</span><span class=p>(),</span> <span class=n>meta</span><span class=p>);</span> <span class=c1>// 5
+</span><span class=c1></span>    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+        <span class=n>meta</span><span class=o>-&gt;</span><span class=n>initClassIsa</span><span class=p>(</span><span class=n>meta</span><span class=p>);</span>
+        <span class=n>cls</span><span class=o>-&gt;</span><span class=n>setSuperclass</span><span class=p>(</span><span class=n>Nil</span><span class=p>);</span>
+        <span class=n>meta</span><span class=o>-&gt;</span><span class=n>setSuperclass</span><span class=p>(</span><span class=n>cls</span><span class=p>);</span>
+        <span class=n>addRootClass</span><span class=p>(</span><span class=n>cls</span><span class=p>);</span>
+        <span class=n>addSubclass</span><span class=p>(</span><span class=n>cls</span><span class=p>,</span> <span class=n>meta</span><span class=p>);</span>
+    <span class=p>}</span>
+
+    <span class=n>addClassTableEntry</span><span class=p>(</span><span class=n>cls</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>在 <code>objc_initializeClassPair_internal</code> 中分配了 <code>class_ro_t</code> / <code>class_rw_t</code> 类结构体，设置类 <code>flag</code> 等类基础信息，最后实现类 <code>superclass</code> 和 <code>isa</code> 的指向。可以用下图来展示链接过程：</p><figure><img src=./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616563221352-bd60e051-3ee5-4369-b1c2-4ff5390b0abe.png width=100%></figure><h2 id=isa指针>isa指针</h2><p>通过前面分析，每一个对象都以一个 <code>isa</code> 指针，实际上 <code>isa</code> 就是将对象 , 类 , 以及元类连接起来，在实例对象中指向类对象，类对象的 <code>isa</code> 指向元类，元类的 <code>isa</code> 指向根元类，根元类指向自己。</p><p>至于 <code>isa</code> 的优化不做过多介绍，读者可自行查阅学习。</p><h2 id=实例对象>实例对象</h2><p>给 <code>Person</code> 类增加一个 <code>age</code> 属性，<code>debug</code> 查看 <code>p</code> 实例对象，<strong>发现实例对象只拷贝了类的成员变量，而没有类定义的方法。</strong></p><p><img class=lazyload src=/svg/loading.min.svg data-src=./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616504316030-60792da4-f45d-4aea-95ab-85f5b51db1b8.png data-srcset="./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616504316030-60792da4-f45d-4aea-95ab-85f5b51db1b8.png, ./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616504316030-60792da4-f45d-4aea-95ab-85f5b51db1b8.png 1.5x, ./OC%e6%96%b9%e6%b3%95&OC%e7%b1%bb&OC%e5%af%b9%e8%b1%a1.assets/1616504316030-60792da4-f45d-4aea-95ab-85f5b51db1b8.png 2x" data-sizes=auto alt=./OC方法&OC类&OC对象.assets/1616504316030-60792da4-f45d-4aea-95ab-85f5b51db1b8.png title=image.png></p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2021-03-10</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/ios.html>iOS</a>,&nbsp;<a href=/tags/aop.html>AOP</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/posts/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5.html class=prev rel=prev title=静态链接&动态链接><i class="fas fa-angle-left fa-fw"></i>静态链接&动态链接</a>
+<a href=/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html class=next rel=next title=方法查找和消息转发>方法查找和消息转发<i class="fas fa-angle-right fa-fw"></i></a></div></div><div id=comments><div id=valine class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://valine.js.org/>Valine</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2018 - 2021</span>&nbsp;|&nbsp;<span class=license>Houugen</span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw"></i></a></div><link rel=stylesheet href=/lib/valine/valine.min.css><script type=text/javascript src=/lib/valine/Valine.min.js></script><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/autocomplete/autocomplete.min.js></script><script type=text/javascript src=/lib/algoliasearch/algoliasearch-lite.umd.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:20},comment:{valine:{appId:"QhRivi4Qm3PjvD0WoqEiJv5n-gzGzoHsz",appKey:"gHPJRKJ7Vfi2xHjiJ3AcP92S",avatar:"mp",el:"#valine",emojiCDN:"https://cdn.jsdelivr.net/npm/emoji-datasource-google@5.0.1/img/google/64/",emojiMaps:{100:"1f4af.png",alien:"1f47d.png",anger:"1f4a2.png",angry:"1f620.png",anguished:"1f627.png",astonished:"1f632.png",black_heart:"1f5a4.png",blue_heart:"1f499.png",blush:"1f60a.png",bomb:"1f4a3.png",boom:"1f4a5.png",broken_heart:"1f494.png",brown_heart:"1f90e.png",clown_face:"1f921.png",cold_face:"1f976.png",cold_sweat:"1f630.png",confounded:"1f616.png",confused:"1f615.png",cry:"1f622.png",crying_cat_face:"1f63f.png",cupid:"1f498.png",dash:"1f4a8.png",disappointed:"1f61e.png",disappointed_relieved:"1f625.png",dizzy:"1f4ab.png",dizzy_face:"1f635.png",drooling_face:"1f924.png",exploding_head:"1f92f.png",expressionless:"1f611.png",face_vomiting:"1f92e.png",face_with_cowboy_hat:"1f920.png",face_with_hand_over_mouth:"1f92d.png",face_with_head_bandage:"1f915.png",face_with_monocle:"1f9d0.png",face_with_raised_eyebrow:"1f928.png",face_with_rolling_eyes:"1f644.png",face_with_symbols_on_mouth:"1f92c.png",face_with_thermometer:"1f912.png",fearful:"1f628.png",flushed:"1f633.png",frowning:"1f626.png",ghost:"1f47b.png",gift_heart:"1f49d.png",green_heart:"1f49a.png",grimacing:"1f62c.png",grin:"1f601.png",grinning:"1f600.png",hankey:"1f4a9.png",hear_no_evil:"1f649.png",heart:"2764-fe0f.png",heart_decoration:"1f49f.png",heart_eyes:"1f60d.png",heart_eyes_cat:"1f63b.png",heartbeat:"1f493.png",heartpulse:"1f497.png",heavy_heart_exclamation_mark_ornament:"2763-fe0f.png",hole:"1f573-fe0f.png",hot_face:"1f975.png",hugging_face:"1f917.png",hushed:"1f62f.png",imp:"1f47f.png",innocent:"1f607.png",japanese_goblin:"1f47a.png",japanese_ogre:"1f479.png",joy:"1f602.png",joy_cat:"1f639.png",kiss:"1f48b.png",kissing:"1f617.png",kissing_cat:"1f63d.png",kissing_closed_eyes:"1f61a.png",kissing_heart:"1f618.png",kissing_smiling_eyes:"1f619.png",laughing:"1f606.png",left_speech_bubble:"1f5e8-fe0f.png",love_letter:"1f48c.png",lying_face:"1f925.png",mask:"1f637.png",money_mouth_face:"1f911.png",nauseated_face:"1f922.png",nerd_face:"1f913.png",neutral_face:"1f610.png",no_mouth:"1f636.png",open_mouth:"1f62e.png",orange_heart:"1f9e1.png",partying_face:"1f973.png",pensive:"1f614.png",persevere:"1f623.png",pleading_face:"1f97a.png",pouting_cat:"1f63e.png",purple_heart:"1f49c.png",rage:"1f621.png",relaxed:"263a-fe0f.png",relieved:"1f60c.png",revolving_hearts:"1f49e.png",right_anger_bubble:"1f5ef-fe0f.png",robot_face:"1f916.png",rolling_on_the_floor_laughing:"1f923.png",scream:"1f631.png",scream_cat:"1f640.png",see_no_evil:"1f648.png",shushing_face:"1f92b.png",skull:"1f480.png",skull_and_crossbones:"2620-fe0f.png",sleeping:"1f634.png",sleepy:"1f62a.png",slightly_frowning_face:"1f641.png",slightly_smiling_face:"1f642.png",smile:"1f604.png",smile_cat:"1f638.png",smiley:"1f603.png",smiley_cat:"1f63a.png",smiling_face_with_3_hearts:"1f970.png",smiling_imp:"1f608.png",smirk:"1f60f.png",smirk_cat:"1f63c.png",sneezing_face:"1f927.png",sob:"1f62d.png",space_invader:"1f47e.png",sparkling_heart:"1f496.png",speak_no_evil:"1f64a.png",speech_balloon:"1f4ac.png","star-struck":"1f929.png",stuck_out_tongue:"1f61b.png",stuck_out_tongue_closed_eyes:"1f61d.png",stuck_out_tongue_winking_eye:"1f61c.png",sunglasses:"1f60e.png",sweat:"1f613.png",sweat_drops:"1f4a6.png",sweat_smile:"1f605.png",thinking_face:"1f914.png",thought_balloon:"1f4ad.png",tired_face:"1f62b.png",triumph:"1f624.png",two_hearts:"1f495.png",unamused:"1f612.png",upside_down_face:"1f643.png",weary:"1f629.png",white_frowning_face:"2639-fe0f.png",white_heart:"1f90d.png",wink:"1f609.png",woozy_face:"1f974.png",worried:"1f61f.png",yawning_face:"1f971.png",yellow_heart:"1f49b.png",yum:"1f60b.png",zany_face:"1f92a.png",zipper_mouth_face:"1f910.png",zzz:"1f4a4.png"},enableQQ:!1,highlight:!0,lang:"en",pageSize:10,placeholder:"Your comment ...",recordIP:!0,serverURLs:"https://leancloud.cn",visitor:!0}},search:{algoliaAppID:"63ROI1DYLO",algoliaIndex:"houugen_blog",algoliaSearchKey:"0282c2777b386667ccc099a27da8a3cb",highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:30,type:"algolia"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
