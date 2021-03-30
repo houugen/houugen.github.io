@@ -11,6 +11,6 @@ https://themes.gohugo.io/loveit/
 未使用开箱即用的lunr（听说对中文不友好），直接用algolia，除了根据Hugo文档配置config.toml对应部分外，为了后续实现Github Actions自动化部署，而使用atomic-algolia，额外需要通过npm init生成package.json后，在其中添加：
 ... &#34;scripts&#34;: { &#34;test&#34;: &#34;echo \&#34;Error: no test specified\&#34; &amp;&amp; exit 1&#34;, &#34;algolia&#34;: &#34;atomic-algolia&#34; }, ... ``
 Actions中workflow配置：
-- name:SetupNodeuses:actions/setup-node@v2.1.0with:node-version:&#39;12.x&#39;# ... #- name:SetupAlgoliaenv:ALGOLIA_APP_ID:63ROI1DYLOALGOLIA_ADMIN_KEY:${{secrets.ALGOLIA_ADMIN_KEY}}ALGOLIA_INDEX_NAME:houugen_blogALGOLIA_INDEX_FILE:public/index.jsonrun:npminstallatomic-algolia&amp;&amp;npmrunalgolia  Note  ALGOLIA_ADMIN_KEY为Algolia API Keys中的Admin API Key，将其值添加到Github的Secrets中    文档图片
+- name:Setup Nodeuses:actions/setup-node@v2.1.0with:node-version:&#39;12.x&#39;# ... #- name:Setup Algoliaenv:ALGOLIA_APP_ID:63ROI1DYLOALGOLIA_ADMIN_KEY:${{ secrets.ALGOLIA_ADMIN_KEY }}ALGOLIA_INDEX_NAME:houugen_blogALGOLIA_INDEX_FILE:public/index.jsonrun:npm install atomic-algolia &amp;&amp; npm run algolia  Note  ALGOLIA_ADMIN_KEY为Algolia API Keys中的Admin API Key，将其值添加到Github的Secrets中    文档图片
 之前使用Hexo时文章和图片文件夹并行在posts中
-➜ houugen.github.io git:(hugo) ✗ tree posts posts/ ├── Blockchain-Security-Articles.md ├── Blockchain-WordCloud │ ├── 1.png │ ├── 2.]]></description></item></channel></rss>
+➜ houugen.github.io git:(hugo) ✗ tree posts posts/ ├── Blockchain-Security-Articles.]]></description></item></channel></rss>

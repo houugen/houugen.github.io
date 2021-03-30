@@ -1,0 +1,375 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><meta http-equiv=x-ua-compatible content="IE=edge, chrome=1"><title>Mach-O 文件结构分析 -</title><meta name=Description content="This is Houugen's Hugo Site"><meta property="og:title" content="Mach-O 文件结构分析"><meta property="og:description" content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   二进制结构 使用 MachoView 工具查看二进制执行文件，结构为：
+Header 头中魔术数字：
+   可执行格式 magic 用途     脚本 \x7FELF 主要用于 shell 脚本，但是也常用语其他解释器，如 Perl, AWK 等。也就是我们常见的脚本文件中在 #! 标记后的字符串，即为执行命令的指令方式，以文件的 stdin 来传递命令   通用二进制格式 0xcafebabe 0xbebafeca 包含多种架构支持的二进制格式，只在 macOS 上支持   Mach-O 0xfeedface（32 位） 0xfeedfacf（64 位） macOS 的原生二进制格式    Mach-O 主要三部分："><meta property="og:type" content="article"><meta property="og:url" content="http://houugen.fun/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-03-01T21:00:00+00:00"><meta property="article:modified_time" content="2021-03-01T21:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Mach-O 文件结构分析"><meta name=twitter:description content="iOS AOP文章系列
+前导知识：
+ Mach-O文件结构分析 静态链接&动态链接 OC方法&OC类&OC对象 方法查找和消息转发  AOP框架：
+ Method Swizzling Fishhook Apsects NSProxy AOP   二进制结构 使用 MachoView 工具查看二进制执行文件，结构为：
+Header 头中魔术数字：
+   可执行格式 magic 用途     脚本 \x7FELF 主要用于 shell 脚本，但是也常用语其他解释器，如 Perl, AWK 等。也就是我们常见的脚本文件中在 #! 标记后的字符串，即为执行命令的指令方式，以文件的 stdin 来传递命令   通用二进制格式 0xcafebabe 0xbebafeca 包含多种架构支持的二进制格式，只在 macOS 上支持   Mach-O 0xfeedface（32 位） 0xfeedfacf（64 位） macOS 的原生二进制格式    Mach-O 主要三部分："><meta name=application-name content><meta name=apple-mobile-web-app-title content><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=canonical href=http://houugen.fun/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html><link rel=prev href=http://houugen.fun/posts/blog%E8%BF%81%E7%A7%BB.html><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=/lib/fontawesome-free/all.min.css><link rel=stylesheet href=/lib/animate/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Mach-O 文件结构分析","inLanguage":"en","mainEntityOfPage":{"@type":"WebPage","@id":"http:\/\/houugen.fun\/posts\/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html"},"genre":"posts","keywords":"iOS, AOP","wordcount":1679,"url":"http:\/\/houugen.fun\/posts\/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html","datePublished":"2021-03-01T21:00:00+00:00","dateModified":"2021-03-01T21:00:00+00:00","publisher":{"@type":"Organization","name":"Houugen"},"author":{"@type":"Person","name":"Houugen"},"description":""}</script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem('theme')?localStorage.getItem('theme')==='dark':'dark'==='auto'?window.matchMedia('(prefers-color-scheme: dark)').matches:'dark'==='dark')&&document.body.setAttribute('theme','dark')</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts.html>Posts </a><a class=menu-item href=/tags.html>Tags </a><a class=menu-item href=/categories.html>Categories </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop><input type=text placeholder="Search titles or contents..." id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin"></i></span>
+</span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw"></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title>Houugen<span class=header-title-post>モブ</span></a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder="Search titles or contents..." id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw"></i></a>
+<a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin"></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts.html title>Posts</a><a class=menu-item href=/tags.html title>Tags</a><a class=menu-item href=/categories.html title>Categories</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw"></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animated flipInX">Mach-O 文件结构分析</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=/ title=Author rel=" author" class=author><i class="fas fa-user-circle fa-fw"></i>Houugen</a></span>&nbsp;<span class=post-category>included in <a href=/categories/ios.html><i class="far fa-folder fa-fw"></i>iOS</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-03-01>2021-03-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;1679 words&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;8 minutes&nbsp;<span id=/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html class=leancloud_visitors data-flag-title="Mach-O 文件结构分析">
+<i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+</span>&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#二进制结构>二进制结构</a></li><li><a href=#举个直观感受下>举个🌰直观感受下</a></li><li><a href=#总结>总结</a></li><li><a href=#探究>探究</a></li></ul></nav></div></div><div class=content id=content><blockquote><p>iOS AOP文章系列</p><p>前导知识：</p><ul><li>Mach-O文件结构分析</li><li>静态链接&动态链接</li><li>OC方法&OC类&OC对象</li><li>方法查找和消息转发</li></ul><p>AOP框架：</p><ul><li>Method Swizzling</li><li>Fishhook</li><li>Apsects</li><li>NSProxy AOP</li></ul></blockquote><h2 id=二进制结构>二进制结构</h2><p>使用 MachoView 工具查看二进制执行文件，结构为：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615894863405-32cb7e4d-9116-47f8-ad92-e2944f5e55c7.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615894863405-32cb7e4d-9116-47f8-ad92-e2944f5e55c7.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615894863405-32cb7e4d-9116-47f8-ad92-e2944f5e55c7.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615894863405-32cb7e4d-9116-47f8-ad92-e2944f5e55c7.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615894863405-32cb7e4d-9116-47f8-ad92-e2944f5e55c7.png title=image.png></p><p><strong>Header</strong> 头中魔术数字：</p><table><thead><tr><th><strong>可执行格式</strong></th><th><strong>magic</strong></th><th><strong>用途</strong></th></tr></thead><tbody><tr><td>脚本</td><td><code>\x7FELF</code></td><td>主要用于 shell 脚本，但是也常用语其他解释器，如 Perl, AWK 等。也就是我们常见的脚本文件中在 <code>#!</code> 标记后的字符串，即为执行命令的指令方式，以文件的 stdin 来传递命令</td></tr><tr><td>通用二进制格式</td><td><code>0xcafebabe</code> <code>0xbebafeca</code></td><td>包含多种架构支持的二进制格式，只在 macOS 上支持</td></tr><tr><td>Mach-O</td><td><code>0xfeedface</code>（32 位） <code>0xfeedfacf</code>（64 位）</td><td>macOS 的原生二进制格式</td></tr></tbody></table><p>Mach-O 主要三部分：</p><ul><li>Header // 描述 MachO 的 cpu 架构、文件类型和加载命令等信息</li><li>Load Command // 描述文件中数据具体组织结构，不同数据类型使用不同加载命令表示，在文件加载解析时，被内核加载器或动态链接器调用，包含段加载命令（<code>LC_SEGMENT_64</code>）</li><li>Sections //加载命令若包含节，节中具体存放数据或代码</li></ul><p>具体数据结构定义可在<a href=https://opensource.apple.com/source/xnu/xnu-792.6.76/EXTERNAL_HEADERS/mach-o/loader.h target=_blank rel="noopener noreffer">源码</a>中查看：</p><p><strong>Header</strong>：</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=cm>/*
+</span><span class=cm> * The 64-bit mach header appears at the very beginning of object files for
+</span><span class=cm> * 64-bit architectures.
+</span><span class=cm> */</span>
+<span class=k>struct</span> <span class=n>mach_header_64</span> <span class=p>{</span>
+    <span class=n>uint32_t</span>    <span class=n>magic</span><span class=p>;</span>      <span class=cm>/* mach magic number identifier */</span>
+    <span class=n>cpu_type_t</span>  <span class=n>cputype</span><span class=p>;</span>    <span class=cm>/* cpu specifier */</span>
+    <span class=n>cpu_subtype_t</span>   <span class=n>cpusubtype</span><span class=p>;</span> <span class=cm>/* machine specifier */</span>
+    <span class=n>uint32_t</span>    <span class=n>filetype</span><span class=p>;</span>   <span class=cm>/* type of file */</span>
+    <span class=n>uint32_t</span>    <span class=n>ncmds</span><span class=p>;</span>      <span class=cm>/* number of load commands */</span>
+    <span class=n>uint32_t</span>    <span class=n>sizeofcmds</span><span class=p>;</span> <span class=cm>/* the size of all the load commands */</span>
+    <span class=n>uint32_t</span>    <span class=n>flags</span><span class=p>;</span>      <span class=cm>/* flags */</span>
+    <span class=n>uint32_t</span>    <span class=n>reserved</span><span class=p>;</span>   <span class=cm>/* reserved */</span>
+<span class=p>};</span>
+</code></pre></div><p><strong>Segment</strong>:</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=cm>/*
+</span><span class=cm> * The 64-bit segment load command indicates that a part of this file is to be
+</span><span class=cm> * mapped into a 64-bit task&#39;s address space.  If the 64-bit segment has
+</span><span class=cm> * sections then section_64 structures directly follow the 64-bit segment
+</span><span class=cm> * command and their size is reflected in cmdsize.
+</span><span class=cm> */</span>
+<span class=k>struct</span> <span class=n>segment_command_64</span> <span class=p>{</span> <span class=cm>/* for 64-bit architectures */</span>
+    <span class=n>uint32_t</span>    <span class=n>cmd</span><span class=p>;</span>        <span class=cm>/* LC_SEGMENT_64 */</span>
+    <span class=n>uint32_t</span>    <span class=n>cmdsize</span><span class=p>;</span>    <span class=cm>/* includes sizeof section_64 structs */</span>
+    <span class=kt>char</span>        <span class=n>segname</span><span class=p>[</span><span class=mi>16</span><span class=p>];</span>    <span class=cm>/* segment name */</span>
+    <span class=n>uint64_t</span>    <span class=n>vmaddr</span><span class=p>;</span>     <span class=cm>/* memory address of this segment */</span>
+    <span class=n>uint64_t</span>    <span class=n>vmsize</span><span class=p>;</span>     <span class=cm>/* memory size of this segment */</span>
+    <span class=n>uint64_t</span>    <span class=n>fileoff</span><span class=p>;</span>    <span class=cm>/* file offset of this segment */</span>
+    <span class=n>uint64_t</span>    <span class=n>filesize</span><span class=p>;</span>   <span class=cm>/* amount to map from the file */</span>
+    <span class=n>vm_prot_t</span>   <span class=n>maxprot</span><span class=p>;</span>    <span class=cm>/* maximum VM protection */</span>
+    <span class=n>vm_prot_t</span>   <span class=n>initprot</span><span class=p>;</span>   <span class=cm>/* initial VM protection */</span>
+    <span class=n>uint32_t</span>    <span class=n>nsects</span><span class=p>;</span>     <span class=cm>/* number of sections in segment */</span>
+    <span class=n>uint32_t</span>    <span class=n>flags</span><span class=p>;</span>      <span class=cm>/* flags */</span>
+<span class=p>};</span>
+</code></pre></div><p><strong>Sections</strong>:</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=k>struct</span> <span class=n>section_64</span> <span class=p>{</span> <span class=cm>/* for 64-bit architectures */</span>
+    <span class=kt>char</span>        <span class=n>sectname</span><span class=p>[</span><span class=mi>16</span><span class=p>];</span>   <span class=cm>/* name of this section */</span>
+    <span class=kt>char</span>        <span class=n>segname</span><span class=p>[</span><span class=mi>16</span><span class=p>];</span>    <span class=cm>/* segment this section goes in */</span>
+    <span class=n>uint64_t</span>    <span class=n>addr</span><span class=p>;</span>       <span class=cm>/* memory address of this section */</span>
+    <span class=n>uint64_t</span>    <span class=n>size</span><span class=p>;</span>       <span class=cm>/* size in bytes of this section */</span>
+    <span class=n>uint32_t</span>    <span class=n>offset</span><span class=p>;</span>     <span class=cm>/* file offset of this section */</span>
+    <span class=n>uint32_t</span>    <span class=n>align</span><span class=p>;</span>      <span class=cm>/* section alignment (power of 2) */</span>
+    <span class=n>uint32_t</span>    <span class=n>reloff</span><span class=p>;</span>     <span class=cm>/* file offset of relocation entries */</span>
+    <span class=n>uint32_t</span>    <span class=n>nreloc</span><span class=p>;</span>     <span class=cm>/* number of relocation entries */</span>
+    <span class=n>uint32_t</span>    <span class=n>flags</span><span class=p>;</span>      <span class=cm>/* flags (section type and attributes)*/</span>
+    <span class=n>uint32_t</span>    <span class=n>reserved1</span><span class=p>;</span>  <span class=cm>/* reserved (for offset or index) */</span>
+    <span class=n>uint32_t</span>    <span class=n>reserved2</span><span class=p>;</span>  <span class=cm>/* reserved (for count or sizeof) */</span>
+    <span class=n>uint32_t</span>    <span class=n>reserved3</span><span class=p>;</span>  <span class=cm>/* reserved */</span>
+<span class=p>};</span>
+</code></pre></div><div class="details admonition note open"><div class="details-summary admonition-title"><i class="icon fas fa-pencil-alt fa-fw"></i>Note<i class="details-icon fas fa-angle-right fa-fw"></i></div><div class=details-content><div class=admonition-content><p><code>section_64</code> 的结构体中有几个比较重要的数据，<code>reloff</code>（重定位表偏移）、<code>nreloc</code>（重定位符号个数）、<code>reserved1</code>（动态符号表偏移），在静态链接和动态链接中发挥重要作用。</p><p>在 <strong>静态链接&动态链接</strong> 文章中加以介绍。</p></div></div></div><h2 id=举个直观感受下>举个🌰直观感受下</h2><p>简单Demo程序：</p><div class=highlight><pre class=chroma><code class=language-objective-c data-lang=objective-c><span class=c1>// person.m
+</span><span class=c1></span><span class=n>NSString</span> <span class=o>*</span><span class=n>string1</span> <span class=o>=</span> <span class=s>@&#34;it is string1&#34;</span><span class=p>;</span>
+<span class=n>NSString</span> <span class=o>*</span><span class=n>string2</span><span class=p>;</span>
+
+<span class=k>@implementation</span> <span class=nc>Person</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>sleep</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;i am sleeping&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>walk</span> <span class=p>{</span>
+    <span class=n>printf</span><span class=p>(</span><span class=s>@&#34;i am walking&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=p>+</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>grow</span> <span class=p>{</span>
+    <span class=k>static</span> <span class=n>NSString</span> <span class=o>*</span><span class=n>string3</span> <span class=o>=</span> <span class=s>@&#34;it is string3&#34;</span><span class=p>;</span>
+    <span class=k>static</span> <span class=n>NSString</span> <span class=o>*</span><span class=n>string4</span><span class=p>;</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;%@_%@&#34;</span><span class=p>,</span> <span class=n>string3</span><span class=p>,</span> <span class=n>string4</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=k>@end</span>
+
+<span class=c1>// person+other.m
+</span><span class=c1></span><span class=k>@implementation</span> <span class=nc>Person</span> <span class=nl>(other)</span>
+
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>ill</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;i am fall ill&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+<span class=p>-</span> <span class=p>(</span><span class=kt>void</span><span class=p>)</span><span class=nf>sleep</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;i need sleeping&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=k>@end</span>
+
+
+<span class=c1>// main.m
+</span><span class=c1></span><span class=kt>void</span> <span class=n>run</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;i am running&#34;</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=n>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+    <span class=k>@autoreleasepool</span> <span class=p>{</span>
+        <span class=c1>// insert code here...
+</span><span class=c1></span>        <span class=n>NSLog</span><span class=p>(</span><span class=s>@&#34;Hello, World!&#34;</span><span class=p>);</span>
+        
+        <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>[[</span><span class=n>Person</span> <span class=n>alloc</span><span class=p>]</span> <span class=n>init</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>walk</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>ill</span><span class=p>];</span>
+        <span class=p>[</span><span class=n>p</span> <span class=n>sleep</span><span class=p>];</span>
+        
+        <span class=n>run</span><span class=p>();</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>程序包含 <code>Person</code> 类，两个实例方法和一个类方法，同时包含一个 <code>Person</code> 的 <code>Category</code> 类，额外扩展和覆盖了原类。还实现了一个 C 函数 <code>run()</code>。</p><p>在 <strong>LC_MAIN</strong> 段可以知道程序 <code>main</code> 函数入口偏移地址 <code>0x3E00</code>：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951665409-d1313c96-4391-4472-be34-efa164036bf2.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951665409-d1313c96-4391-4472-be34-efa164036bf2.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951665409-d1313c96-4391-4472-be34-efa164036bf2.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951665409-d1313c96-4391-4472-be34-efa164036bf2.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615951665409-d1313c96-4391-4472-be34-efa164036bf2.png title=image.png></p><p>具体汇编代码在 <strong>Section64(__TEXT,__text)</strong> 中：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951734533-eb2bd1e8-958e-482a-91c5-f77e40c61b3f.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951734533-eb2bd1e8-958e-482a-91c5-f77e40c61b3f.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951734533-eb2bd1e8-958e-482a-91c5-f77e40c61b3f.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951734533-eb2bd1e8-958e-482a-91c5-f77e40c61b3f.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615951734533-eb2bd1e8-958e-482a-91c5-f77e40c61b3f.png title=image.png></p><p>我们也可以使用 <code>otool</code> 工具反汇编代码，具体分析下程序如何使用各段节数据</p><pre><code>➜  Debug otool -tV TestMacho1
+TestMacho1:
+(__TEXT,__text) section
+-[Person(other) ill]:
+0000000100003ce0    pushq   %rbp
+0000000100003ce1    movq    %rsp, %rbp
+0000000100003ce4    subq    $0x10, %rsp
+0000000100003ce8    leaq    0x321(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003cef    movq    %rdi, -0x8(%rbp)
+0000000100003cf3    movq    %rsi, -0x10(%rbp)
+0000000100003cf7    movq    %rax, %rdi
+0000000100003cfa    movb    $0x0, %al
+0000000100003cfc    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003d01    addq    $0x10, %rsp
+0000000100003d05    popq    %rbp
+0000000100003d06    retq
+0000000100003d07    nopw    (%rax,%rax)
+-[Person(other) sleep]:
+0000000100003d10    pushq   %rbp
+0000000100003d11    movq    %rsp, %rbp
+0000000100003d14    subq    $0x10, %rsp
+0000000100003d18    leaq    0x311(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003d1f    movq    %rdi, -0x8(%rbp)
+0000000100003d23    movq    %rsi, -0x10(%rbp)
+0000000100003d27    movq    %rax, %rdi
+0000000100003d2a    movb    $0x0, %al
+0000000100003d2c    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003d31    addq    $0x10, %rsp
+0000000100003d35    popq    %rbp
+0000000100003d36    retq
+0000000100003d37    nop
+0000000100003d38    nop
+0000000100003d39    nop
+0000000100003d3a    nop
+0000000100003d3b    nop
+0000000100003d3c    nop
+0000000100003d3d    nop
+0000000100003d3e    nop
+0000000100003d3f    nop
+-[Person sleep]:
+0000000100003d40    pushq   %rbp
+0000000100003d41    movq    %rsp, %rbp
+0000000100003d44    subq    $0x10, %rsp
+0000000100003d48    leaq    0x321(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003d4f    movq    %rdi, -0x8(%rbp)
+0000000100003d53    movq    %rsi, -0x10(%rbp)
+0000000100003d57    movq    %rax, %rdi
+0000000100003d5a    movb    $0x0, %al
+0000000100003d5c    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003d61    addq    $0x10, %rsp
+0000000100003d65    popq    %rbp
+0000000100003d66    retq
+0000000100003d67    nopw    (%rax,%rax)
+-[Person walk]:
+0000000100003d70    pushq   %rbp
+0000000100003d71    movq    %rsp, %rbp
+0000000100003d74    subq    $0x10, %rsp
+0000000100003d78    leaq    0x311(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003d7f    movq    %rdi, -0x8(%rbp)
+0000000100003d83    movq    %rsi, -0x10(%rbp)
+0000000100003d87    movq    %rax, %rdi
+0000000100003d8a    movb    $0x0, %al
+0000000100003d8c    callq   0x100003ec4             ## symbol stub for: _printf
+0000000100003d91    addq    $0x10, %rsp
+0000000100003d95    popq    %rbp
+0000000100003d96    retq
+0000000100003d97    nopw    (%rax,%rax)
++[Person grow]:
+0000000100003da0    pushq   %rbp
+0000000100003da1    movq    %rsp, %rbp
+0000000100003da4    subq    $0x10, %rsp
+0000000100003da8    leaq    0x321(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003daf    movq    %rdi, -0x8(%rbp)
+0000000100003db3    movq    %rsi, -0x10(%rbp)
+0000000100003db7    movq    _grow.string3(%rip), %rsi
+0000000100003dbe    movq    _grow.string4(%rip), %rdx
+0000000100003dc5    movq    %rax, %rdi
+0000000100003dc8    movb    $0x0, %al
+0000000100003dca    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003dcf    addq    $0x10, %rsp
+0000000100003dd3    popq    %rbp
+0000000100003dd4    retq
+0000000100003dd5    nop
+0000000100003dd6    nop
+0000000100003dd7    nop
+0000000100003dd8    nop
+0000000100003dd9    nop
+0000000100003dda    nop
+0000000100003ddb    nop
+0000000100003ddc    nop
+0000000100003ddd    nop
+0000000100003dde    nop
+0000000100003ddf    nop
+_run:
+0000000100003de0    pushq   %rbp
+0000000100003de1    movq    %rsp, %rbp
+0000000100003de4    leaq    0x305(%rip), %rax       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003deb    movq    %rax, %rdi
+0000000100003dee    movb    $0x0, %al
+0000000100003df0    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003df5    popq    %rbp
+0000000100003df6    retq
+0000000100003df7    nopw    (%rax,%rax)
+_main:
+0000000100003e00    pushq   %rbp
+0000000100003e01    movq    %rsp, %rbp
+0000000100003e04    subq    $0x20, %rsp
+0000000100003e08    movl    $0x0, -0x4(%rbp)
+0000000100003e0f    movl    %edi, -0x8(%rbp)
+0000000100003e12    movq    %rsi, -0x10(%rbp)
+0000000100003e16    callq   0x100003eb8             ## symbol stub for: _objc_autoreleasePoolPush
+0000000100003e1b    leaq    0x2ee(%rip), %rcx       ## Objc cfstring ref: @&quot;bad cfstring ref&quot;
+0000000100003e22    movq    %rcx, %rdi
+0000000100003e25    movq    %rax, -0x20(%rbp)
+0000000100003e29    movb    $0x0, %al
+0000000100003e2b    callq   0x100003ea6             ## symbol stub for: _NSLog
+0000000100003e30    movq    0x4329(%rip), %rcx      ## Objc class ref: Person
+0000000100003e37    movq    %rcx, %rdi
+0000000100003e3a    callq   0x100003eac             ## symbol stub for: _objc_alloc_init
+0000000100003e3f    movq    %rax, -0x18(%rbp)
+0000000100003e43    movq    -0x18(%rbp), %rax
+0000000100003e47    movq    0x42fa(%rip), %rsi      ## Objc selector ref: walk
+0000000100003e4e    movq    %rax, %rdi
+0000000100003e51    callq   *0x1a9(%rip)            ## Objc message: +[Person walk]
+0000000100003e57    movq    -0x18(%rbp), %rax
+0000000100003e5b    movq    0x42ee(%rip), %rsi      ## Objc selector ref: ill
+0000000100003e62    movq    %rax, %rdi
+0000000100003e65    callq   *0x195(%rip)            ## Objc message: -[%rdi ill]
+0000000100003e6b    movq    -0x18(%rbp), %rax
+0000000100003e6f    movq    0x42e2(%rip), %rsi      ## Objc selector ref: sleep
+0000000100003e76    movq    %rax, %rdi
+0000000100003e79    callq   *0x181(%rip)            ## Objc message: -[%rdi sleep]
+0000000100003e7f    callq   _run
+0000000100003e84    xorl    %edx, %edx
+0000000100003e86    movl    %edx, %esi
+0000000100003e88    leaq    -0x18(%rbp), %rax
+0000000100003e8c    movq    %rax, %rdi
+0000000100003e8f    callq   0x100003ebe             ## symbol stub for: _objc_storeStrong
+0000000100003e94    movq    -0x20(%rbp), %rdi
+0000000100003e98    callq   0x100003eb2             ## symbol stub for: _objc_autoreleasePoolPop
+0000000100003e9d    xorl    %eax, %eax
+0000000100003e9f    addq    $0x20, %rsp
+0000000100003ea3    popq    %rbp
+0000000100003ea4    retq
+</code></pre><p>首先我们看下 <code>_main</code> 中核心汇编：</p><pre><code>0000000100003e1b	leaq	0x2ee(%rip), %rcx
+</code></pre><p>0x3e32(ip为下一条汇编地址) + 0x2ee = 0x4120</p><p>指向 <strong>Section64(__DATA,__cfstring)</strong> 节字符串真实值的偏移，该节中保存 <code>ObjC</code> 字符串，包括类型、大小、值等：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951898681-4637bfc2-d3b7-4464-be08-8bf09320a56c.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951898681-4637bfc2-d3b7-4464-be08-8bf09320a56c.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951898681-4637bfc2-d3b7-4464-be08-8bf09320a56c.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951898681-4637bfc2-d3b7-4464-be08-8bf09320a56c.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615951898681-4637bfc2-d3b7-4464-be08-8bf09320a56c.png title=image.png></p><p>具体字符串值在 <code>0x3F80</code> 地址中，指向 <strong>Section64(__TEXT,__cstring)</strong>：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951961746-ca37490b-a884-4713-8a2b-62533b629d03.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951961746-ca37490b-a884-4713-8a2b-62533b629d03.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951961746-ca37490b-a884-4713-8a2b-62533b629d03.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615951961746-ca37490b-a884-4713-8a2b-62533b629d03.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615951961746-ca37490b-a884-4713-8a2b-62533b629d03.png title=image.png></p><pre><code>0000000100003e2b	callq	0x100003ea6 
+</code></pre><p>调用 <code>0x3ea6</code> 偏移地址，指向<strong>符号桩</strong> <strong>Section64(__TEXT,__stubs)</strong> 中，我们看下存储的什么</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615952706776-2f0bad03-0ea9-41fb-9b86-a6793f8890eb.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615952706776-2f0bad03-0ea9-41fb-9b86-a6793f8890eb.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615952706776-2f0bad03-0ea9-41fb-9b86-a6793f8890eb.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615952706776-2f0bad03-0ea9-41fb-9b86-a6793f8890eb.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615952706776-2f0bad03-0ea9-41fb-9b86-a6793f8890eb.png title=image.png></p><p>其实 <code>__stubs</code> 存储很多小段代码，我们反汇编看下：</p><pre><code>➜  Debug otool -v TestMacho1 -s __TEXT __stubs
+TestMacho1:
+Contents of (__TEXT,__stubs) section
+0000000100003ea6    jmpq    *0x4154(%rip)
+0000000100003eac    jmpq    *0x4156(%rip)
+0000000100003eb2    jmpq    *0x4158(%rip)
+0000000100003eb8    jmpq    *0x415a(%rip)
+0000000100003ebe    jmpq    *0x415c(%rip)
+0000000100003ec4    jmpq    *0x415e(%rip)
+</code></pre><p>第一条：<code>0000000100003ea6 jmpq *0x4154(%rip)</code></p><p>0x3eac + 0x4154 = 0x8000</p><p>而 <code>0x8000</code> 指向 <strong>Section64(DATA,la_symbol_ptr)</strong>:</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957188552-1b0efc8c-d74d-4b5c-b42a-052f871a008d.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957188552-1b0efc8c-d74d-4b5c-b42a-052f871a008d.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957188552-1b0efc8c-d74d-4b5c-b42a-052f871a008d.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957188552-1b0efc8c-d74d-4b5c-b42a-052f871a008d.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615957188552-1b0efc8c-d74d-4b5c-b42a-052f871a008d.png title=image.png></p><p>继续看 <code>la_symbol_ptr</code> 中的值指向什么地方：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957316090-85808759-26e7-458a-82a2-a16b27e629df.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957316090-85808759-26e7-458a-82a2-a16b27e629df.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957316090-85808759-26e7-458a-82a2-a16b27e629df.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957316090-85808759-26e7-458a-82a2-a16b27e629df.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615957316090-85808759-26e7-458a-82a2-a16b27e629df.png title=image.png></p><p>发现其指向<strong>桩函数节</strong> <strong>Section64(__TEXT,__stub_helper)</strong>，分析下其中代码，回跳到 <code>0x3ecc</code> 后又 <code>jump</code> 到 <code>rip+0x12d（0x4008）</code></p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957868668-0aa7e33b-4cda-464f-a790-351129a6632d.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957868668-0aa7e33b-4cda-464f-a790-351129a6632d.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957868668-0aa7e33b-4cda-464f-a790-351129a6632d.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615957868668-0aa7e33b-4cda-464f-a790-351129a6632d.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615957868668-0aa7e33b-4cda-464f-a790-351129a6632d.png title=image.png></p><p>指向 <code>got</code> 表存储的 <code>dyld_stub_binder</code>，后续会走 lazy binding 逻辑，这个我们通过动态调试加以验证。可以在 <code>main</code> 函数的 <code>NSLog</code> 下断点，查看 <code>__la_symbol_ptr</code> 存储的值为桩函数代码地址，代码通过调用 <code>dyld_stub_binder</code> 找到 <code>NSLog</code> 真实地址替换 <code>__la_symbol_ptr</code> 中存储的值（由 <code>0x100003edc</code> 变为 <code>0x7fff214af5f3</code> ），下次调用 <code>NSLog</code> 即可直接找到其实现地址。和静态分析一致。</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965040256-e04081fc-e647-4196-9334-409e4eada315.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965040256-e04081fc-e647-4196-9334-409e4eada315.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965040256-e04081fc-e647-4196-9334-409e4eada315.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965040256-e04081fc-e647-4196-9334-409e4eada315.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615965040256-e04081fc-e647-4196-9334-409e4eada315.png title=image.png></p><p>到这只完成分析 <code>NSLog(@"Hello, World!");</code> 是如何在二进制中体现的。keep going&mldr;</p><pre><code>0000000100003e30	movq	0x4329(%rip), %rcx 
+0000000100003e3a	callq	0x100003eac 
+</code></pre><p>对应OC代码： <code>Person *p = [[Person alloc] init];</code></p><p>跳转到 <code>_objc_alloc_init</code> 的过程和之前一样，不重复分析，看下是如何找到 <code>Person</code> 类名的。</p><p><code>0x3e37 + 0x4329 = 0x8160</code>， 指向 <strong>Section64(DATA,objc_classrefs)</strong> 节，该节获取当前所有 oc 类和被引用的 oc 类地址</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965964272-1f4a5f74-825d-41de-88bd-366317c8d9bd.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965964272-1f4a5f74-825d-41de-88bd-366317c8d9bd.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965964272-1f4a5f74-825d-41de-88bd-366317c8d9bd.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615965964272-1f4a5f74-825d-41de-88bd-366317c8d9bd.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615965964272-1f4a5f74-825d-41de-88bd-366317c8d9bd.png title=image.png></p><p>其值 <code>0x8190</code> 指向 <strong>Section64(DATA,objc_data)</strong></p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615966244291-81d354ad-b572-4a9b-9718-a276c95c0960.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615966244291-81d354ad-b572-4a9b-9718-a276c95c0960.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615966244291-81d354ad-b572-4a9b-9718-a276c95c0960.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615966244291-81d354ad-b572-4a9b-9718-a276c95c0960.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615966244291-81d354ad-b572-4a9b-9718-a276c95c0960.png title=image.png></p><p>这个 <code>section</code> 存的什么数据呢，我们可以从<a href=https://clang.llvm.org/doxygen/CGObjCMac_8cpp_source.html target=_blank rel="noopener noreffer">llvm源码</a>窥探一二</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c> <span class=c1>/// Build the metaclass object for a class.
+</span><span class=c1></span> <span class=c1>///
+</span><span class=c1></span> <span class=c1>/// struct _class_t {
+</span><span class=c1></span> <span class=c1>///   struct _class_t *isa;
+</span><span class=c1></span> <span class=c1>///   struct _class_t * const superclass;
+</span><span class=c1></span> <span class=c1>///   void *cache;
+</span><span class=c1></span> <span class=c1>///   IMP *vtable;
+</span><span class=c1></span> <span class=c1>///   struct class_ro_t *ro;
+</span><span class=c1></span> <span class=c1>/// }
+</span><span class=c1></span> <span class=c1>///
+</span><span class=c1></span> <span class=n>llvm</span><span class=o>::</span><span class=n>GlobalVariable</span> <span class=o>*</span>
+ <span class=n>CGObjCNonFragileABIMac</span><span class=o>::</span><span class=n>BuildClassObject</span><span class=p>(</span><span class=k>const</span> <span class=n>ObjCInterfaceDecl</span> <span class=o>*</span><span class=n>CI</span><span class=p>,</span>
+                                          <span class=kt>bool</span> <span class=n>isMetaclass</span><span class=p>,</span>
+                                          <span class=n>llvm</span><span class=o>::</span><span class=n>Constant</span> <span class=o>*</span><span class=n>IsAGV</span><span class=p>,</span>
+                                          <span class=n>llvm</span><span class=o>::</span><span class=n>Constant</span> <span class=o>*</span><span class=n>SuperClassGV</span><span class=p>,</span>
+                                          <span class=n>llvm</span><span class=o>::</span><span class=n>Constant</span> <span class=o>*</span><span class=n>ClassRoGV</span><span class=p>,</span>
+                                          <span class=kt>bool</span> <span class=n>HiddenVisibility</span><span class=p>)</span> <span class=p>{</span>
+   <span class=n>ConstantInitBuilder</span> <span class=n>builder</span><span class=p>(</span><span class=n>CGM</span><span class=p>);</span>
+   <span class=k>auto</span> <span class=n>values</span> <span class=o>=</span> <span class=n>builder</span><span class=p>.</span><span class=n>beginStruct</span><span class=p>(</span><span class=n>ObjCTypes</span><span class=p>.</span><span class=n>ClassnfABITy</span><span class=p>);</span>
+   <span class=n>values</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>IsAGV</span><span class=p>);</span>
+   <span class=k>if</span> <span class=p>(</span><span class=n>SuperClassGV</span><span class=p>)</span> <span class=p>{</span>
+     <span class=n>values</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>SuperClassGV</span><span class=p>);</span>
+   <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+     <span class=n>values</span><span class=p>.</span><span class=n>addNullPointer</span><span class=p>(</span><span class=n>ObjCTypes</span><span class=p>.</span><span class=n>ClassnfABIPtrTy</span><span class=p>);</span>
+   <span class=p>}</span>
+   <span class=n>values</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>ObjCEmptyCacheVar</span><span class=p>);</span>
+   <span class=n>values</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>ObjCEmptyVtableVar</span><span class=p>);</span>
+   <span class=n>values</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>ClassRoGV</span><span class=p>);</span>
+  
+   <span class=n>llvm</span><span class=o>::</span><span class=n>GlobalVariable</span> <span class=o>*</span><span class=n>GV</span> <span class=o>=</span>
+     <span class=n>cast</span><span class=o>&lt;</span><span class=n>llvm</span><span class=o>::</span><span class=n>GlobalVariable</span><span class=o>&gt;</span><span class=p>(</span><span class=n>GetClassGlobal</span><span class=p>(</span><span class=n>CI</span><span class=p>,</span> <span class=n>isMetaclass</span><span class=p>,</span> <span class=n>ForDefinition</span><span class=p>));</span>
+   <span class=n>values</span><span class=p>.</span><span class=n>finishAndSetAsInitializer</span><span class=p>(</span><span class=n>GV</span><span class=p>);</span>
+  
+   <span class=k>if</span> <span class=p>(</span><span class=n>CGM</span><span class=p>.</span><span class=n>getTriple</span><span class=p>().</span><span class=n>isOSBinFormatMachO</span><span class=p>())</span>
+     <span class=n>GV</span><span class=o>-&gt;</span><span class=n>setSection</span><span class=p>(</span><span class=s>&#34;__DATA, __objc_data&#34;</span><span class=p>);</span>
+   <span class=n>GV</span><span class=o>-&gt;</span><span class=n>setAlignment</span><span class=p>(</span><span class=n>llvm</span><span class=o>::</span><span class=n>Align</span><span class=p>(</span>
+       <span class=n>CGM</span><span class=p>.</span><span class=n>getDataLayout</span><span class=p>().</span><span class=n>getABITypeAlignment</span><span class=p>(</span><span class=n>ObjCTypes</span><span class=p>.</span><span class=n>ClassnfABITy</span><span class=p>)));</span>
+   <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>CGM</span><span class=p>.</span><span class=n>getTriple</span><span class=p>().</span><span class=n>isOSBinFormatCOFF</span><span class=p>())</span>
+     <span class=k>if</span> <span class=p>(</span><span class=n>HiddenVisibility</span><span class=p>)</span>
+       <span class=n>GV</span><span class=o>-&gt;</span><span class=n>setVisibility</span><span class=p>(</span><span class=n>llvm</span><span class=o>::</span><span class=n>GlobalValue</span><span class=o>::</span><span class=n>HiddenVisibility</span><span class=p>);</span>
+   <span class=k>return</span> <span class=n>GV</span><span class=p>;</span>
+ <span class=p>}</span>
+</code></pre></div><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615967685094-4c13a81d-59fc-42e6-a677-ebc32e74cc7b.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615967685094-4c13a81d-59fc-42e6-a677-ebc32e74cc7b.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615967685094-4c13a81d-59fc-42e6-a677-ebc32e74cc7b.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615967685094-4c13a81d-59fc-42e6-a677-ebc32e74cc7b.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615967685094-4c13a81d-59fc-42e6-a677-ebc32e74cc7b.png title=image.png></p><p><code>class_ro_t</code> 结构体是如何定义的呢？存储了什么数据呢？我们可以通过 <a href=https://opensource.apple.com/source/objc4/objc4-437/runtime/objc-runtime-new.h target=_blank rel="noopener noreffer">Runtime源码</a> 中得到答案：</p><div class=highlight><pre class=chroma><code class=language-c data-lang=c><span class=k>typedef</span> <span class=k>struct</span> <span class=n>class_ro_t</span> <span class=p>{</span>
+    <span class=n>uint32_t</span> <span class=n>flags</span><span class=p>;</span>
+    <span class=n>uint32_t</span> <span class=n>instanceStart</span><span class=p>;</span>
+    <span class=n>uint32_t</span> <span class=n>instanceSize</span><span class=p>;</span>
+<span class=cp>#ifdef __LP64__
+</span><span class=cp></span>    <span class=n>uint32_t</span> <span class=n>reserved</span><span class=p>;</span>
+<span class=cp>#endif
+</span><span class=cp></span>
+    <span class=k>const</span> <span class=n>uint8_t</span> <span class=o>*</span> <span class=n>ivarLayout</span><span class=p>;</span>
+    
+    <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>name</span><span class=p>;</span>
+    <span class=k>const</span> <span class=n>method_list_t</span> <span class=o>*</span> <span class=n>baseMethods</span><span class=p>;</span>
+    <span class=k>const</span> <span class=n>protocol_list_t</span> <span class=o>*</span> <span class=n>baseProtocols</span><span class=p>;</span>
+    <span class=k>const</span> <span class=n>ivar_list_t</span> <span class=o>*</span> <span class=n>ivars</span><span class=p>;</span>
+
+    <span class=k>const</span> <span class=n>uint8_t</span> <span class=o>*</span> <span class=n>weakIvarLayout</span><span class=p>;</span>
+    <span class=k>const</span> <span class=k>struct</span> <span class=n>objc_property_list</span> <span class=o>*</span><span class=n>baseProperties</span><span class=p>;</span>
+<span class=p>}</span> <span class=n>class_ro_t</span><span class=p>;</span>
+
+<span class=k>typedef</span> <span class=k>struct</span> <span class=n>method_list_t</span> <span class=p>{</span>
+    <span class=n>uint32_t</span> <span class=n>entsize_NEVER_USE</span><span class=p>;</span>  <span class=c1>// low 2 bits used for fixup markers
+</span><span class=c1></span>    <span class=n>uint32_t</span> <span class=n>count</span><span class=p>;</span>
+    <span class=k>struct</span> <span class=n>method_t</span> <span class=n>first</span><span class=p>;</span>
+<span class=p>}</span> <span class=n>method_list_t</span><span class=p>;</span>
+
+<span class=k>typedef</span> <span class=k>struct</span> <span class=n>method_t</span> <span class=p>{</span>
+    <span class=n>SEL</span> <span class=n>name</span><span class=p>;</span>
+    <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span><span class=n>types</span><span class=p>;</span>
+    <span class=n>IMP</span> <span class=n>imp</span><span class=p>;</span>
+<span class=p>}</span> <span class=n>method_t</span><span class=p>;</span>
+</code></pre></div><p>该结构体中存储了方法、协议、变量、属性列表</p><p><code>0x8100</code> 具体指向 <strong>Section64(__DATA,__objc_const)</strong> 节</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png title=image.png></p><p>通过结构体分析我们可以知道类名存储在 <strong>Section64(__TEXT,__objc_classname)</strong>，为<code>Person</code>，其中包含的方法列表 <code>method_list_t</code> 结构体在地址 <code>0x8030</code> 中，通过方法结构体分析方法名有: [ill, sleep, sleep, walk]</p><p>细心发现这里有个两个同名方法 <code>sleep</code>，我们可以看下第一个 <code>sleep</code> 方法 imp 地址为 <code>0x3d10</code>，由之前 otool 反汇编的结果看是 <code>Person Category</code> 实现的 <code>sleep</code>（<code>-[Person(other) sleep]:</code>），而函数查找是按照列表顺序来的，因此可以实现函数覆盖的效果，实际原函数并没有被覆盖。</p><p>接着我们再来看下 <code>[p sleep]</code> OC方法调用：</p><pre><code>0000000100003e6b	movq	-0x18(%rbp), %rax
+0000000100003e6f	movq	0x42e2(%rip), %rsi 
+0000000100003e79	callq	*0x181(%rip)
+</code></pre><p><code>rbp - 0x18</code> 存储之前 <code>Person</code> 实例化后的对象，赋值给 <code>rax</code>（参数1）</p><p><code>rip + 0x42e2 = 0x8158</code>，指向 <strong>Section64(__DATA,__objc_selrefs)</strong> 节，存储的地址指向函数名为 <code>sleep</code>，赋值给 <code>rsi</code>（参数2）：</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615972998584-fd813ce1-3c6d-4e84-a67b-53f554e9f1bd.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615972998584-fd813ce1-3c6d-4e84-a67b-53f554e9f1bd.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615972998584-fd813ce1-3c6d-4e84-a67b-53f554e9f1bd.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615972998584-fd813ce1-3c6d-4e84-a67b-53f554e9f1bd.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615972998584-fd813ce1-3c6d-4e84-a67b-53f554e9f1bd.png title=image.png></p><p><code>rip + 0x181 = 0x4000</code>，为 <code>_got</code> 表中 <code>_objc_msgSend</code> 方法，此时就进入OC的消息转发机制，具体原理在后续章节介绍。为什么会是这种形式，我们通过编译后源码转换成C代码的样子。</p><p>clang -rewrite-objc main.m -o main.cpp</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=kt>void</span> <span class=nf>run</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>NSLog</span><span class=p>((</span><span class=n>NSString</span> <span class=o>*</span><span class=p>)</span><span class=o>&amp;</span><span class=n>__NSConstantStringImpl__var_folders_16_fnqk_6_50_z264j18b83nb9w0000gp_T_main_c8b264_mi_0</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span> <span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+    <span class=cm>/* @autoreleasepool */</span> <span class=p>{</span> <span class=n>__AtAutoreleasePool</span> <span class=n>__autoreleasepool</span><span class=p>;</span> 
+
+        <span class=n>NSLog</span><span class=p>((</span><span class=n>NSString</span> <span class=o>*</span><span class=p>)</span><span class=o>&amp;</span><span class=n>__NSConstantStringImpl__var_folders_16_fnqk_6_50_z264j18b83nb9w0000gp_T_main_c8b264_mi_1</span><span class=p>);</span>
+
+        <span class=n>Person</span> <span class=o>*</span><span class=n>p</span> <span class=o>=</span> <span class=p>((</span><span class=n>Person</span> <span class=o>*</span><span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)((</span><span class=n>Person</span> <span class=o>*</span><span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>objc_getClass</span><span class=p>(</span><span class=s>&#34;Person&#34;</span><span class=p>),</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;alloc&#34;</span><span class=p>)),</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;init&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;walk&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;ill&#34;</span><span class=p>));</span>
+        <span class=p>((</span><span class=kt>void</span> <span class=p>(</span><span class=o>*</span><span class=p>)(</span><span class=n>id</span><span class=p>,</span> <span class=n>SEL</span><span class=p>))(</span><span class=kt>void</span> <span class=o>*</span><span class=p>)</span><span class=n>objc_msgSend</span><span class=p>)((</span><span class=n>id</span><span class=p>)</span><span class=n>p</span><span class=p>,</span> <span class=n>sel_registerName</span><span class=p>(</span><span class=s>&#34;sleep&#34;</span><span class=p>));</span>
+
+        <span class=n>run</span><span class=p>();</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>可以发现，调用 OC 方法实际是通过 <code>objc_msgSend(id, sel)</code> 进行消息查找和转发。</p><p>最后我们看下 C 函数 <code>run()</code> 调用，直接通过 <code>call 0x100003de0</code> 即可跳转 <code>run</code> 实现处</p><p><img class=lazyload src=/svg/loading.min.svg data-src=./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615974268887-b13efede-7407-4cc8-955e-8cb47d867ebd.png data-srcset="./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615974268887-b13efede-7407-4cc8-955e-8cb47d867ebd.png, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615974268887-b13efede-7407-4cc8-955e-8cb47d867ebd.png 1.5x, ./Mach-O%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84%e5%88%86%e6%9e%90.assets/1615974268887-b13efede-7407-4cc8-955e-8cb47d867ebd.png 2x" data-sizes=auto alt=./Mach-O文件结构分析.assets/1615974268887-b13efede-7407-4cc8-955e-8cb47d867ebd.png title=image.png></p><h2 id=总结>总结</h2><p>文中分析涉及到多个 <code>Section</code>，我们在这里做个汇总</p><table><thead><tr><th><strong>名称</strong></th><th><strong>作用</strong></th></tr></thead><tbody><tr><td>__TEXT,__text</td><td>可执行机器码</td></tr><tr><td>__TEXT,__stubs</td><td>符号桩，跳转到 <code>__la_symbol_ptr</code> 表对应地址</td></tr><tr><td>__TEXT,__stub_helper</td><td>桩函数，<code>la_symbol_ptr</code> 表中没有找到真正符号地址时，均指向这，通过 <code>dyld_stub_binder</code> 找到函数实现地址并替换 <code>la_symbol_pt</code> r表项</td></tr><tr><td>__TEXT,__cstring</td><td>字符串</td></tr><tr><td>__TEXT,__objc_classname</td><td>类名</td></tr><tr><td>__DATA,__cfstring</td><td>保存 Objc 字符串类型、大小、值信息</td></tr><tr><td>__DATA,__objc_const</td><td><code>_class_t</code> 中 <code>class_ro_t</code> 结构体，以及类函数列表存储在此节</td></tr><tr><td>__DATA,__objc_selrefs</td><td>SEL 函数名地址</td></tr><tr><td>__DATA,__objc_classrefs</td><td>OC 类地址</td></tr><tr><td>__DATA,__la_symbol_ptr</td><td>动态链接时，延迟绑定需要，跳转到 <code>TEXT,stub_helper</code> 对应地址</td></tr><tr><td>__DATA,__objc_data</td><td><code>_class_t</code> 类结构体存储在此节</td></tr></tbody></table><h2 id=探究>探究</h2><ol><li>在 MachO 文件结构还未讲到的 <code>LC_SEGMENT_64(_LINKEDIT)</code>、<code>LC_SYMTAB</code>、<code>LCDYSYMTAB</code>、<code>LC_LOAD_DYLIB</code>、<code>Symbol Table</code>和<code>Dynamic Symbol Table</code>等作用</li><li>这些段节涉及静态/动态链接原理</li><li>动态链接中延迟绑定技术</li><li>OC方法本质/OC类对象/实例对象</li><li>类结构体中isa指针</li><li>Runtime 机制中方法查找和消息转发机制</li><li>fishhook 是如何利用符号绑定技术实现动态 hook</li></ol><p>后续我们会一一解密，敬请期待&mldr;</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2021-03-01</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/ios.html>iOS</a>,&nbsp;<a href=/tags/aop.html>AOP</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/posts/blog%E8%BF%81%E7%A7%BB.html class=prev rel=prev title="Blog From Hexo To Hugo"><i class="fas fa-angle-left fa-fw"></i>Blog From Hexo To Hugo</a></div></div><div id=comments><div id=valine class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://valine.js.org/>Valine</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2018 - 2021</span>&nbsp;|&nbsp;<span class=license>Houugen</span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw"></i></a></div><link rel=stylesheet href=/lib/valine/valine.min.css><script type=text/javascript src=/lib/valine/Valine.min.js></script><script type=text/javascript src=/lib/smooth-scroll/smooth-scroll.min.js></script><script type=text/javascript src=/lib/autocomplete/autocomplete.min.js></script><script type=text/javascript src=/lib/algoliasearch/algoliasearch-lite.umd.min.js></script><script type=text/javascript src=/lib/lazysizes/lazysizes.min.js></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:20},comment:{valine:{appId:"QhRivi4Qm3PjvD0WoqEiJv5n-gzGzoHsz",appKey:"gHPJRKJ7Vfi2xHjiJ3AcP92S",avatar:"mp",el:"#valine",emojiCDN:"https://cdn.jsdelivr.net/npm/emoji-datasource-google@5.0.1/img/google/64/",emojiMaps:{100:"1f4af.png",alien:"1f47d.png",anger:"1f4a2.png",angry:"1f620.png",anguished:"1f627.png",astonished:"1f632.png",black_heart:"1f5a4.png",blue_heart:"1f499.png",blush:"1f60a.png",bomb:"1f4a3.png",boom:"1f4a5.png",broken_heart:"1f494.png",brown_heart:"1f90e.png",clown_face:"1f921.png",cold_face:"1f976.png",cold_sweat:"1f630.png",confounded:"1f616.png",confused:"1f615.png",cry:"1f622.png",crying_cat_face:"1f63f.png",cupid:"1f498.png",dash:"1f4a8.png",disappointed:"1f61e.png",disappointed_relieved:"1f625.png",dizzy:"1f4ab.png",dizzy_face:"1f635.png",drooling_face:"1f924.png",exploding_head:"1f92f.png",expressionless:"1f611.png",face_vomiting:"1f92e.png",face_with_cowboy_hat:"1f920.png",face_with_hand_over_mouth:"1f92d.png",face_with_head_bandage:"1f915.png",face_with_monocle:"1f9d0.png",face_with_raised_eyebrow:"1f928.png",face_with_rolling_eyes:"1f644.png",face_with_symbols_on_mouth:"1f92c.png",face_with_thermometer:"1f912.png",fearful:"1f628.png",flushed:"1f633.png",frowning:"1f626.png",ghost:"1f47b.png",gift_heart:"1f49d.png",green_heart:"1f49a.png",grimacing:"1f62c.png",grin:"1f601.png",grinning:"1f600.png",hankey:"1f4a9.png",hear_no_evil:"1f649.png",heart:"2764-fe0f.png",heart_decoration:"1f49f.png",heart_eyes:"1f60d.png",heart_eyes_cat:"1f63b.png",heartbeat:"1f493.png",heartpulse:"1f497.png",heavy_heart_exclamation_mark_ornament:"2763-fe0f.png",hole:"1f573-fe0f.png",hot_face:"1f975.png",hugging_face:"1f917.png",hushed:"1f62f.png",imp:"1f47f.png",innocent:"1f607.png",japanese_goblin:"1f47a.png",japanese_ogre:"1f479.png",joy:"1f602.png",joy_cat:"1f639.png",kiss:"1f48b.png",kissing:"1f617.png",kissing_cat:"1f63d.png",kissing_closed_eyes:"1f61a.png",kissing_heart:"1f618.png",kissing_smiling_eyes:"1f619.png",laughing:"1f606.png",left_speech_bubble:"1f5e8-fe0f.png",love_letter:"1f48c.png",lying_face:"1f925.png",mask:"1f637.png",money_mouth_face:"1f911.png",nauseated_face:"1f922.png",nerd_face:"1f913.png",neutral_face:"1f610.png",no_mouth:"1f636.png",open_mouth:"1f62e.png",orange_heart:"1f9e1.png",partying_face:"1f973.png",pensive:"1f614.png",persevere:"1f623.png",pleading_face:"1f97a.png",pouting_cat:"1f63e.png",purple_heart:"1f49c.png",rage:"1f621.png",relaxed:"263a-fe0f.png",relieved:"1f60c.png",revolving_hearts:"1f49e.png",right_anger_bubble:"1f5ef-fe0f.png",robot_face:"1f916.png",rolling_on_the_floor_laughing:"1f923.png",scream:"1f631.png",scream_cat:"1f640.png",see_no_evil:"1f648.png",shushing_face:"1f92b.png",skull:"1f480.png",skull_and_crossbones:"2620-fe0f.png",sleeping:"1f634.png",sleepy:"1f62a.png",slightly_frowning_face:"1f641.png",slightly_smiling_face:"1f642.png",smile:"1f604.png",smile_cat:"1f638.png",smiley:"1f603.png",smiley_cat:"1f63a.png",smiling_face_with_3_hearts:"1f970.png",smiling_imp:"1f608.png",smirk:"1f60f.png",smirk_cat:"1f63c.png",sneezing_face:"1f927.png",sob:"1f62d.png",space_invader:"1f47e.png",sparkling_heart:"1f496.png",speak_no_evil:"1f64a.png",speech_balloon:"1f4ac.png","star-struck":"1f929.png",stuck_out_tongue:"1f61b.png",stuck_out_tongue_closed_eyes:"1f61d.png",stuck_out_tongue_winking_eye:"1f61c.png",sunglasses:"1f60e.png",sweat:"1f613.png",sweat_drops:"1f4a6.png",sweat_smile:"1f605.png",thinking_face:"1f914.png",thought_balloon:"1f4ad.png",tired_face:"1f62b.png",triumph:"1f624.png",two_hearts:"1f495.png",unamused:"1f612.png",upside_down_face:"1f643.png",weary:"1f629.png",white_frowning_face:"2639-fe0f.png",white_heart:"1f90d.png",wink:"1f609.png",woozy_face:"1f974.png",worried:"1f61f.png",yawning_face:"1f971.png",yellow_heart:"1f49b.png",yum:"1f60b.png",zany_face:"1f92a.png",zipper_mouth_face:"1f910.png",zzz:"1f4a4.png"},enableQQ:!1,highlight:!0,lang:"en",pageSize:10,placeholder:"Your comment ...",recordIP:!0,serverURLs:"https://leancloud.cn",visitor:!0}},search:{algoliaAppID:"63ROI1DYLO",algoliaIndex:"houugen_blog",algoliaSearchKey:"0282c2777b386667ccc099a27da8a3cb",highlightTag:"em",maxResultLength:10,noResultsFound:"No results found",snippetLength:30,type:"algolia"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
