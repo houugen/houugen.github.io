@@ -113,3 +113,5 @@ Person *p = [MyProxy proxyWithTarget:[[Person alloc] init]];
 ## 原理
 
 `proxyWithTarget:` 实现将一个对象引用到自实现的代理类中，在真正调用对象方法时，代理类没有方法定义，找不到对应的 `IMP`，就会进入消息转发流程，从而执行 `forwardInvocation:` ，而我们在 `forwardInvocation:` 中执行原方法前后加入额外逻辑实现 `AOP`。
+
+这里不仅可以打印方法名和修改方法逻辑，因为 NSInvocation 中封装了方法的全部信息，因此还能够打印或修改**入参**及**返回值**。
