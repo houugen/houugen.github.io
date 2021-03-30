@@ -5,22 +5,19 @@ tags: ["iOS","AOP"]
 categories: ["iOS"]
 ---
 
-
-> iOS AOP文章系列
+>  iOS AOP文章系列
 >
-> 前导知识：
+>  前导知识：
+>  * [Mach-O文件结构分析](https://houugen.fun/posts/mach-o%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90.html)
+>  * [静态链接&动态链接](https://houugen.fun/posts/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5.html)
+>  * [OC方法&OC类&OC对象](https://houugen.fun/posts/oc%E6%96%B9%E6%B3%95oc%E7%B1%BBoc%E5%AF%B9%E8%B1%A1.html)
+>  * [方法查找和消息转发](https://houugen.fun/posts/%E6%96%B9%E6%B3%95%E6%9F%A5%E6%89%BE%E5%92%8C%E6%B6%88%E6%81%AF%E8%BD%AC%E5%8F%91.html)
 >
-> * Mach-O文件结构分析
-> * 静态链接&动态链接
-> * OC方法&OC类&OC对象
-> * 方法查找和消息转发
->
-> AOP框架：
->
-> * Method Swizzling
-> * Fishhook
-> * Apsects
-> * NSProxy AOP
+>  AOP框架：
+>  * [Method Swizzling](https://houugen.fun/posts/method-swizzling.html)
+>  * [Fishhook](https://houugen.fun/posts/fishhook.html)
+>  * Apsects
+>  * NSProxy AOP
 
 [fishhook](https://github.com/facebook/fishhook) 是 `facebook` 开源的一款简单易用的动态 hook 框架。一起学习下其原理。
 
