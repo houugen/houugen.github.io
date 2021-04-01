@@ -24,9 +24,11 @@ categories: ["iOS"]
 
 iOS 有一个原生的 `AOP` 方法，就是利用 `NSProxy` 代理类！，我们先看下[官网](https://developer.apple.com/documentation/foundation/nsproxy)介绍：
 
-> Typically, a message to a proxy is forwarded to the real object or causes the proxy to load (or transform itself into) the real object. Subclasses of `NSProxy` can be used to implement transparent distributed messaging (for example, [`NSDistantObject`](https://developer.apple.com/documentation/foundation/nsdistantobject)) or for lazy instantiation of objects that are expensive to create.
->
-> `NSProxy` implements the basic methods required of a root class, including those defined in the [`NSObjectProtocol`](https://developer.apple.com/documentation/objectivec/nsobjectprotocol) protocol. However, as an abstract class it doesn’t provide an initialization method, and it raises an exception upon receiving any message it doesn’t respond to. A concrete subclass must therefore provide an initialization or creation method and override the [`forwardInvocation(_:)`](https://developer.apple.com/documentation/foundation/nsproxy/1416417-forwardinvocation) and [`methodSignatureForSelector:`](https://developer.apple.com/documentation/foundation/nsproxy/1589828-methodsignatureforselector) methods to handle messages that it doesn’t implement itself.
+{{< admonition quote >}}
+Typically, a message to a proxy is forwarded to the real object or causes the proxy to load (or transform itself into) the real object. Subclasses of `NSProxy` can be used to implement transparent distributed messaging (for example, [`NSDistantObject`](https://developer.apple.com/documentation/foundation/nsdistantobject)) or for lazy instantiation of objects that are expensive to create.
+
+`NSProxy` implements the basic methods required of a root class, including those defined in the [`NSObjectProtocol`](https://developer.apple.com/documentation/objectivec/nsobjectprotocol) protocol. However, as an abstract class it doesn’t provide an initialization method, and it raises an exception upon receiving any message it doesn’t respond to. A concrete subclass must therefore provide an initialization or creation method and override the [`forwardInvocation(_:)`](https://developer.apple.com/documentation/foundation/nsproxy/1416417-forwardinvocation) and [`methodSignatureForSelector:`](https://developer.apple.com/documentation/foundation/nsproxy/1589828-methodsignatureforselector) methods to handle messages that it doesn’t implement itself.
+{{< /admonition >}}
 
 说明两点：
 
