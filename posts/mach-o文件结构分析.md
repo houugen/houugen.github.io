@@ -502,9 +502,11 @@ typedef struct method_t {
 
 ![image.png](./Mach-O文件结构分析.assets/1615969455713-9f2a094e-584b-42b0-8b4f-2efdea7c1c23.png)
 
-通过结构体分析我们可以知道类名存储在 **Section64(__TEXT,__objc_classname)**，为`Person`，其中包含的方法列表 `method_list_t` 结构体在地址 `0x8030` 中，通过方法结构体分析方法名有: [ill, sleep, sleep, walk]
+通过结构体分析我们可以知道类名存储在 **Section64(__TEXT,__objc_classname)**，为`Person`，其中包含的方法列表 `method_list_t` 结构体在地址 `0x8030` 中，前8个字节保存 `flag` 和 `count`，后边开始多个 `method_t` 结构体，通过方法结构体分析方法名有: [ill, sleep, sleep, walk]
 
-
+{{< admonition note >}}
+这里也是 class-dump -A 参数能够打印方法 IMP 地址的关键
+{{< /admonition  >}}
 
 细心发现这里有个两个同名方法 `sleep`，我们可以看下第一个 `sleep` 方法 imp 地址为 `0x3d10`，由之前 otool 反汇编的结果看是 `Person Category` 实现的 `sleep`（`-[Person(other) sleep]:`），而函数查找是按照列表顺序来的，因此可以实现函数覆盖的效果，实际原函数并没有被覆盖。
 

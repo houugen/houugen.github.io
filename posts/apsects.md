@@ -17,7 +17,9 @@
 
  ## 介绍
 
-> **Think of Aspects as method swizzling on steroids. It allows you to add code to existing methods per class or per instance**, whilst thinking of the insertion point e.g. before/instead/after. Aspects automatically deals with calling super and is easier to use than regular method swizzling.
+{{< admonition quote >}}
+**Think of Aspects as method swizzling on steroids. It allows you to add code to existing methods per class or per instance**, whilst thinking of the insertion point e.g. before/instead/after. Aspects automatically deals with calling super and is easier to use than regular method swizzling.
+{{< /admonition >}}
 
 从 [Apsects](https://github.com/steipete/Aspects) 的介绍可以看到利用 `swizzling` 技术来达到为类方法或实例方法添加额外逻辑。且有 `before` / `instead` / `after` 三种场景。
 
