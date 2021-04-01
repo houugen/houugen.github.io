@@ -312,7 +312,7 @@ static void perform_rebinding_with_section(struct rebindings_entry *rebindings,
 
 ## 总结
 
-其实 fishhook 的逻辑就是**已知符号（要 hook 的函数名）反推其在 `_got` / `__la_symbol_ptr` 表中的位置**，**然后将真实函数地址写入**。而符号的查找过程在源码和注释中已经理的很清晰，通过[官网](https://github.com/facebook/fishhook)的图能更直观的看出几个表结构的关联。
+其实 fishhook 的逻辑就是**已知符号（要 hook 的函数名）反推其在 `_got` / `__la_symbol_ptr` 表中的位置**，**然后将新实现函数真实地址写入**。而符号的查找过程在源码和注释中已经理的很清晰，通过[官网](https://github.com/facebook/fishhook)的图能更直观的看出几个表结构的关联。
 
 {{< figure src="./Fishhook.assets/1616950292390-89cde569-34b7-4f30-b27a-62f5bc206b53.png" width="100%" >}}
 
